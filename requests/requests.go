@@ -2,6 +2,7 @@ package requests
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -19,6 +20,7 @@ func parseURLQuery(URL *url.URL, key string) string {
 
 // GetCaseCounts : logic when /cases endpoint is called. Returns all aggregated confirmed cases/death counts between from and to dates in the query
 func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL.String())
 	from := parseURLQuery(r.URL, "from")
 	to := parseURLQuery(r.URL, "to")
 	var response []byte
