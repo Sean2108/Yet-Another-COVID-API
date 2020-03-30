@@ -44,8 +44,8 @@ var deathsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/maste
 
 var caseCountsCache []caseCounts
 
-// AllAggregatedData : cache the query for getting all data, because it is the most heavily used
-var AllAggregatedData []CaseCountsAggregated
+// allAggregatedData : cache the query for getting all data, because it is the most heavily used
+var allAggregatedData []CaseCountsAggregated
 
 var lastDate time.Time
 var firstDate time.Time
@@ -56,6 +56,25 @@ func UpdateCaseCounts() {
 	caseCountsCache = nil
 	confirmedData, deathsData := getData()
 	headerRow := confirmedData[0]
+	extractCaseCounts(headerRow, confirmedData, deathsData)
+	setDateBoundariesAndAllAggregatedData(headerRow)
+}
+
+// GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
+func GetCaseCounts(from string, to string) []CaseCountsAggregated {
+	if from == "" && to == "" {
+		return allAggregatedData
+	}
+	return aggregateDataBetweenDates(from, to)
+}
+
+func setDateBoundariesAndAllAggregatedData(headerRow []string) {
+	firstDate, _ = time.Parse(inputDateFormat, headerRow[4])
+	lastDate, _ = time.Parse(inputDateFormat, headerRow[len(headerRow)-1])
+	allAggregatedData = aggregateDataBetweenDates("", "")
+}
+
+func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string) {
 	numRows := len(confirmedData)
 	ch := make(chan caseCounts, numRows-1)
 	wg := sync.WaitGroup{}
@@ -68,17 +87,6 @@ func UpdateCaseCounts() {
 	for caseCountsItem := range ch {
 		caseCountsCache = append(caseCountsCache, caseCountsItem)
 	}
-	firstDate, _ = time.Parse(inputDateFormat, headerRow[4])
-	lastDate, _ = time.Parse(inputDateFormat, headerRow[len(headerRow)-1])
-	AllAggregatedData = aggregateDataBetweenDates("", "")
-}
-
-// GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
-func GetCaseCounts(from string, to string) []CaseCountsAggregated {
-	if from == "" && to == "" {
-		return AllAggregatedData
-	}
-	return aggregateDataBetweenDates(from, to)
 }
 
 func readCSVFromURL(url string) ([][]string, error) {
@@ -140,10 +148,7 @@ func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deaths
 	if longError != nil {
 		log.Fatal(longError.Error())
 	}
-	// remove data with lat = 0 and long = 0
-	if lat != 0.0 || long != 0.0 {
-		ch <- caseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
-	}
+	ch <- caseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
 	wg.Done()
 }
 
@@ -168,18 +173,18 @@ func getFromAndToIndices(from string, to string) (int, int) {
 	return fromIndex, toIndex
 }
 
-func getStatisticsSum(input []caseCount) (int, int) {
-	confirmedSum := 0
-	deathsSum := 0
-	for _, item := range input {
-		confirmedSum += item.Confirmed
-		deathsSum += item.Deaths
+func getStatisticsSum(input []caseCount, fromIndex int, toIndex int) (int, int) {
+	confirmedAtStartDate := 0
+	deathsAtStartDate := 0
+	if fromIndex > 0 {
+		confirmedAtStartDate = input[fromIndex-1].Confirmed
+		deathsAtStartDate = input[fromIndex-1].Deaths
 	}
-	return confirmedSum, deathsSum
+	return input[toIndex].Confirmed - confirmedAtStartDate, input[toIndex].Deaths - deathsAtStartDate
 }
 
 func convertToAggregatedElement(caseCountsItem caseCounts, from int, to int, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
-	confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts[from:to])
+	confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts, from, to)
 	ch <- CaseCountsAggregated{stateInformation{caseCountsItem.State, caseCountsItem.Country, caseCountsItem.Lat, caseCountsItem.Long}, statistics{confirmedSum, deathsSum}}
 	wg.Done()
 }

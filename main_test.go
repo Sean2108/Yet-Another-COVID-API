@@ -57,12 +57,6 @@ func verifyData(allItem casecount.CaseCountsAggregated, queriedItem casecount.Ca
 	if allItem.Deaths < queriedItem.Deaths {
 		t.Errorf("AllAggregateData has fewer deaths than queriedAggregateData, country: %s, state: %s, all: %d, queried: %d", allItem.Country, allItem.State, allItem.Deaths, queriedItem.Deaths)
 	}
-	if allItem.Confirmed < allItem.Deaths {
-		t.Errorf("AllAggregateData has fewer confirmed cases than deaths, country: %s, state: %s, confirmed: %d, deaths: %d", allItem.Country, allItem.State, allItem.Confirmed, allItem.Deaths)
-	}
-	if queriedItem.Confirmed < queriedItem.Deaths {
-		t.Errorf("QueriedAggregateData has fewer confirmed cases than deaths, country: %s, state: %s, confirmed: %d, deaths: %d", queriedItem.Country, queriedItem.State, queriedItem.Confirmed, queriedItem.Deaths)
-	}
 }
 
 func TestCasesEndpoint(t *testing.T) {
