@@ -140,7 +140,10 @@ func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deaths
 	if longError != nil {
 		log.Fatal(longError.Error())
 	}
-	ch <- caseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
+	// remove data with lat = 0 and long = 0
+	if lat != 0.0 || long != 0.0 {
+		ch <- caseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
+	}
 	wg.Done()
 }
 
@@ -160,7 +163,7 @@ func getFromAndToIndices(from string, to string) (int, int) {
 		fromIndex = getDaysBetweenDates(firstDate, fromDate)
 	}
 	if toError == nil && toDate.Before(lastDate) {
-		toIndex = getDaysBetweenDates(toDate, lastDate)
+		toIndex = getDaysBetweenDates(firstDate, toDate)
 	}
 	return fromIndex, toIndex
 }
