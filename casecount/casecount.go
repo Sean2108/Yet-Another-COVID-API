@@ -26,6 +26,12 @@ type stateInformation struct {
 	Long    float32
 }
 
+type countryInformation struct {
+	Country string
+	Lat     float32
+	Long    float32
+}
+
 type caseCounts struct {
 	stateInformation
 	Counts []caseCount
@@ -37,6 +43,12 @@ type CaseCountsAggregated struct {
 	statistics
 }
 
+// CountryCaseCountsAggregated : contains the information about the country and the latitude/longitude as well as the number of confirmed cases/deaths
+type CountryCaseCountsAggregated struct {
+	countryInformation
+	statistics
+}
+
 const inputDateFormat = "1/2/06"
 
 var confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
@@ -44,8 +56,9 @@ var deathsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/maste
 
 var caseCountsCache []caseCounts
 
-// allAggregatedData : cache the query for getting all data, because it is the most heavily used
+// cache the query for getting all data for all states and all countries, because it is the most heavily used
 var allAggregatedData []CaseCountsAggregated
+var allCountriesAggregatedData []CountryCaseCountsAggregated
 
 var lastDate time.Time
 var firstDate time.Time
@@ -63,15 +76,29 @@ func UpdateCaseCounts() {
 // GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
 func GetCaseCounts(from string, to string) []CaseCountsAggregated {
 	if from == "" && to == "" {
+		log.Println("GetCaseCounts query for all data")
 		return allAggregatedData
 	}
+	log.Printf("GetCaseCounts query from: %s, to: %s\n", from, to)
 	return aggregateDataBetweenDates(from, to)
+}
+
+// GetCountryCaseCounts : get case counts for all countries between from date and to date. Return case counts for entire period if from and to dates are empty strings
+func GetCountryCaseCounts(from string, to string) []CountryCaseCountsAggregated {
+	if from == "" && to == "" {
+		log.Println("GetCountryCaseCounts query for all data")
+		return allCountriesAggregatedData
+	}
+	log.Printf("GetCountryCaseCounts query from: %s, to: %s\n", from, to)
+	agg := aggregateDataBetweenDates(from, to)
+	return aggregateCountryDataFromStatesAggregate(agg)
 }
 
 func setDateBoundariesAndAllAggregatedData(headerRow []string) {
 	firstDate, _ = time.Parse(inputDateFormat, headerRow[4])
 	lastDate, _ = time.Parse(inputDateFormat, headerRow[len(headerRow)-1])
 	allAggregatedData = aggregateDataBetweenDates("", "")
+	allCountriesAggregatedData = aggregateCountryDataFromStatesAggregate(allAggregatedData)
 }
 
 func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string) {
@@ -202,6 +229,29 @@ func aggregateDataBetweenDates(from string, to string) []CaseCountsAggregated {
 	var aggregatedData []CaseCountsAggregated
 	for caseCountsAgg := range ch {
 		aggregatedData = append(aggregatedData, caseCountsAgg)
+	}
+	return aggregatedData
+}
+
+func aggregateCountryDataFromStatesAggregate(aggregateDataWithStates []CaseCountsAggregated) []CountryCaseCountsAggregated {
+	type CountryAggregationInformation struct {
+		LatSum, LongSum                float32
+		ConfirmedSum, DeathsSum, Count int
+	}
+	var countryInformationMap map[string]CountryAggregationInformation
+	countryInformationMap = make(map[string]CountryAggregationInformation)
+	for _, caseCountsAgg := range aggregateDataWithStates {
+		if val, ok := countryInformationMap[caseCountsAgg.Country]; ok {
+			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, val.ConfirmedSum + caseCountsAgg.Confirmed, val.DeathsSum + caseCountsAgg.Deaths, val.Count + 1}
+		} else {
+			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Confirmed, caseCountsAgg.Deaths, 1}
+		}
+	}
+	var aggregatedData []CountryCaseCountsAggregated
+	for country, information := range countryInformationMap {
+		countF := float32(information.Count)
+		countryCaseCountAgg := CountryCaseCountsAggregated{countryInformation{country, information.LatSum / countF, information.LongSum / countF}, statistics{information.ConfirmedSum, information.DeathsSum}}
+		aggregatedData = append(aggregatedData, countryCaseCountAgg)
 	}
 	return aggregatedData
 }

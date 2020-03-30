@@ -14,7 +14,6 @@ const port = ":8080"
 
 func setupRoutes() {
 	http.HandleFunc("/cases", requests.GetCaseCounts)
-	http.HandleFunc("/news", requests.GetNewsForCountry)
 }
 
 func main() {
