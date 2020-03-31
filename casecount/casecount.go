@@ -216,10 +216,19 @@ func getFromAndToIndices(from string, to string) (int, int) {
 func getStatisticsSum(input []caseCount, fromIndex int, toIndex int) (int, int) {
 	confirmedAtStartDate := 0
 	deathsAtStartDate := 0
+
+	if fromIndex >= len(input) || toIndex < 0 {
+		return 0, 0
+	}
+
 	if fromIndex > 0 {
 		confirmedAtStartDate = input[fromIndex-1].Confirmed
 		deathsAtStartDate = input[fromIndex-1].Deaths
 	}
+	if toIndex >= len(input) {
+		toIndex = len(input) - 1
+	}
+
 	return input[toIndex].Confirmed - confirmedAtStartDate, input[toIndex].Deaths - deathsAtStartDate
 }
 
