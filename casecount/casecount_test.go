@@ -1,6 +1,9 @@
 package casecount
 
 import (
+	"bytes"
+	"io/ioutil"
+	"net/http"
 	"sort"
 	"strings"
 	"testing"
@@ -53,6 +56,53 @@ func (a ByCountryAgg) Less(i, j int) bool {
 
 func (a ByCountryAgg) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
+}
+
+type mockClient struct{}
+
+var mockedGet func(url string) (*http.Response, error)
+
+func (m *mockClient) Get(url string) (*http.Response, error) {
+	return mockedGet(url)
+}
+
+func TestReadCSVFromURL(t *testing.T) {
+	client = &mockClient{}
+	mockedGet = func(url string) (*http.Response, error) {
+		csvStr := "Province/State,Country/Region,Lat,Long,1/22/20,1/23/20,1/24/20\n,Afghanistan,33.0,65.1,2,3,4\n,Albania,41.1533,20.1683,4,5,6\n,Algeria,28.0339,1.6596,7,8,9"
+		r := ioutil.NopCloser(bytes.NewReader([]byte(csvStr)))
+		return &http.Response{
+			StatusCode: 200,
+			Body:       r,
+		}, nil
+	}
+	confirmedData, deathsData := getData()
+	expected := [][]string{
+		{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20"},
+		{"", "Afghanistan", "33.0", "65.1", "2", "3", "4"},
+		{"", "Albania", "41.1533", "20.1683", "4", "5", "6"},
+		{"", "Algeria", "28.0339", "1.6596", "7", "8", "9"},
+	}
+	if len(confirmedData) != 4 {
+		t.Errorf("Length of confirmedData is incorrect, got: %d, want %d.", len(confirmedData), 3)
+	}
+	if len(deathsData) != 4 {
+		t.Errorf("Length of deathsData is incorrect, got: %d, want %d.", len(deathsData), 3)
+	}
+	for i, row := range confirmedData {
+		for j, col := range row {
+			if col != expected[i][j] {
+				t.Errorf("Value in confirmedData is incorrect, got: %s, want: %s.", col, expected[i][j])
+			}
+		}
+	}
+	for i, row := range deathsData {
+		for j, col := range row {
+			if col != expected[i][j] {
+				t.Errorf("Value in deathsData is incorrect, got: %s, want: %s.", col, expected[i][j])
+			}
+		}
+	}
 }
 
 func TestGetDaysBetweenDates(t *testing.T) {

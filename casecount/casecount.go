@@ -51,10 +51,15 @@ type CountryCaseCountsAggregated struct {
 	statistics
 }
 
+// HTTPClient : Interface to mock net/http client
+type HTTPClient interface {
+	Get(url string) (*http.Response, error)
+}
+
 const inputDateFormat = "1/2/06"
 
-var confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
-var deathsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+const confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+const deathsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 
 var caseCountsCache []caseCounts
 
@@ -64,6 +69,12 @@ var allCountriesAggregatedData []CountryCaseCountsAggregated
 
 var lastDate time.Time
 var firstDate time.Time
+
+var client HTTPClient
+
+func init() {
+	client = &http.Client{}
+}
 
 // UpdateCaseCounts : Pull data from the John Hopkins CSV files on GitHub, store the result in a cache and also cache the aggregate data for the entire period
 func UpdateCaseCounts() {
@@ -119,7 +130,7 @@ func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData 
 }
 
 func readCSVFromURL(url string) ([][]string, error) {
-	resp, err := http.Get(url)
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}

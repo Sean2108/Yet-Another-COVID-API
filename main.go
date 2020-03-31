@@ -11,15 +11,20 @@ import (
 	"yet-another-covid-map-api/schedule"
 )
 
+var port string
+
 func setupRoutes() {
 	http.HandleFunc("/cases", requests.GetCaseCounts)
 }
 
-func main() {
-	port := os.Getenv("PORT")
+func init() {
+	port = os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+}
+
+func main() {
 	// the John Hopkins data is updated at 11:50 or 11:55 pm GMT everyday, so we will call update at midnight utc (0 hour)
 	schedule.CallFunctionDaily(casecount.UpdateCaseCounts, 0)
 	wg := sync.WaitGroup{}

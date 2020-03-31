@@ -64,11 +64,11 @@ func TestCasesEndpoint(t *testing.T) {
 		t.Skip()
 	}
 	go main()
-	allAggregatedData := getData("http://localhost:8080/cases", t)
+	allAggregatedData := getData("http://localhost:"+port+"/cases", t)
 	if len(allAggregatedData) == 0 {
 		t.Errorf("Response has no items.")
 	}
-	queriedAggregatedData := getData("http://localhost:8080/cases?from=3/15/20&to=3/17/20", t)
+	queriedAggregatedData := getData("http://localhost:"+port+"/cases?from=3/15/20&to=3/17/20", t)
 	if len(queriedAggregatedData) == 0 {
 		t.Errorf("Response has no items.")
 	}
