@@ -10,23 +10,6 @@ import (
 	"yet-another-covid-map-api/casecount"
 )
 
-type ByCountryAndState []casecount.CaseCountsAggregated
-
-func (a ByCountryAndState) Len() int {
-	return len(a)
-}
-
-func (a ByCountryAndState) Less(i, j int) bool {
-	if a[i].Country == a[j].Country {
-		return a[i].State < a[j].State
-	}
-	return a[i].Country < a[j].Country
-}
-
-func (a ByCountryAndState) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
 func getData(URL string, t *testing.T) []casecount.CaseCountsAggregated {
 	resp, err := http.Get(URL)
 	if err != nil {
@@ -76,8 +59,8 @@ func TestCasesEndpoint(t *testing.T) {
 	if len(allAggregatedData) != len(queriedAggregatedData) {
 		t.Errorf("Reponses have different lengths, all: %d, queried: %d", len(allAggregatedData), len(queriedAggregatedData))
 	}
-	sort.Sort(ByCountryAndState(allAggregatedData))
-	sort.Sort(ByCountryAndState(queriedAggregatedData))
+	sort.Sort(casecount.ByCountryAndStateAgg(allAggregatedData))
+	sort.Sort(casecount.ByCountryAndStateAgg(queriedAggregatedData))
 	for i := 0; i < len(allAggregatedData); i++ {
 		verifyData(allAggregatedData[i], queriedAggregatedData[i], t)
 	}
