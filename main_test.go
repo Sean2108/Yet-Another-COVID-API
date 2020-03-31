@@ -60,6 +60,9 @@ func verifyData(allItem casecount.CaseCountsAggregated, queriedItem casecount.Ca
 }
 
 func TestCasesEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	go main()
 	allAggregatedData := getData("http://localhost:8080/cases", t)
 	if len(allAggregatedData) == 0 {
