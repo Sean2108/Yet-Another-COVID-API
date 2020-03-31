@@ -1,4 +1,7 @@
 # Yet-Another-COVID-Map-API
+
+[![Build Status](https://travis-ci.com/Sean2108/Yet-Another-COVID-Map-API.svg?branch=master)](https://travis-ci.com/Sean2108/Yet-Another-COVID-Map-API)[![codecov](https://codecov.io/gh/Sean2108/Yet-Another-COVID-Map-API/branch/master/graph/badge.svg)](https://codecov.io/gh/Sean2108/Yet-Another-COVID-Map-API)
+
 API written in Go to provide number of COVID cases and deaths with date queries, and news stories related to COVID for countries.
 Data is provided by John Hopkins CSSE (https://github.com/CSSEGISandData/COVID-19).
 
