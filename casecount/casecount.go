@@ -56,21 +56,23 @@ type HTTPClient interface {
 	Get(url string) (*http.Response, error)
 }
 
-const inputDateFormat = "1/2/06"
+const (
+	inputDateFormat = "1/2/06"
+	confirmedURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+	deathsURL       = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+)
 
-const confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
-const deathsURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+var (
+	// cache the query for getting all data for all states and all countries, because it is the most heavily used
+	allAggregatedData          []CaseCountsAggregated
+	allCountriesAggregatedData []CountryCaseCountsAggregated
 
-var caseCountsCache []caseCounts
+	caseCountsCache []caseCounts
+	lastDate        time.Time
+	firstDate       time.Time
 
-// cache the query for getting all data for all states and all countries, because it is the most heavily used
-var allAggregatedData []CaseCountsAggregated
-var allCountriesAggregatedData []CountryCaseCountsAggregated
-
-var lastDate time.Time
-var firstDate time.Time
-
-var client HTTPClient
+	client HTTPClient
+)
 
 func init() {
 	client = &http.Client{}
