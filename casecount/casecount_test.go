@@ -2,6 +2,7 @@ package casecount
 
 import (
 	"sort"
+	"strings"
 	"testing"
 	"time"
 )
@@ -215,7 +216,7 @@ func TestAggregateDataBetweenDates_AllDates(t *testing.T) {
 func TestAggregateDataBetweenDates_QueryDates(t *testing.T) {
 	caseCountsCache = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
-	result := aggregateDataBetweenDates("1/24/20", "1/26/20")
+	result, _ := aggregateDataBetweenDates("1/24/20", "1/26/20", "")
 	sort.Sort(ByCountryAndStateAgg(result))
 	if len(result) != 5 {
 		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
@@ -234,10 +235,59 @@ func TestAggregateDataBetweenDates_QueryDates(t *testing.T) {
 	}
 }
 
+func TestAggregateDataBetweenDates_QueryCountry(t *testing.T) {
+	caseCountsCache = getTestCaseCounts()
+	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
+	result, _ := aggregateDataBetweenDates("", "", "Singapore")
+	sort.Sort(ByCountryAndStateAgg(result))
+	if len(result) != 1 {
+		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 1)
+	}
+	expectedData := []CaseCountsAggregated{
+		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
+	}
+	for i, item := range result {
+		if item != expectedData[i] {
+			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
+		}
+	}
+}
+
+func TestAggregateDataBetweenDates_QueryCountry_wEiRdCaSiNg(t *testing.T) {
+	caseCountsCache = getTestCaseCounts()
+	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
+	result, _ := aggregateDataBetweenDates("", "", "sInGaPoRe")
+	sort.Sort(ByCountryAndStateAgg(result))
+	if len(result) != 1 {
+		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 1)
+	}
+	expectedData := []CaseCountsAggregated{
+		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
+	}
+	for i, item := range result {
+		if item != expectedData[i] {
+			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
+		}
+	}
+}
+
+func TestAggregateDataBetweenDates_QueryCountry_SpellingMistakeInCountryName(t *testing.T) {
+	caseCountsCache = getTestCaseCounts()
+	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
+	result, err := aggregateDataBetweenDates("", "", "Sngapore")
+	sort.Sort(ByCountryAndStateAgg(result))
+	if len(result) != 0 {
+		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 0)
+	}
+	if !strings.Contains(err.Error(), "Singapore") {
+		t.Errorf("Error message is incorrect, got: %s, want %s.", err.Error(), "string containing Singapore")
+	}
+}
+
 func TestAggregateDataBetweenDates_QueryDates_FromIsOutOfRange(t *testing.T) {
 	caseCountsCache = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
-	result := aggregateDataBetweenDates("1/21/20", "1/26/20")
+	result, _ := aggregateDataBetweenDates("1/21/20", "1/26/20", "")
 	sort.Sort(ByCountryAndStateAgg(result))
 	if len(result) != 5 {
 		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
@@ -259,7 +309,7 @@ func TestAggregateDataBetweenDates_QueryDates_FromIsOutOfRange(t *testing.T) {
 func TestAggregateDataBetweenDates_QueryDates_ToIsOutOfRange(t *testing.T) {
 	caseCountsCache = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
-	result := aggregateDataBetweenDates("1/24/20", "1/28/20")
+	result, _ := aggregateDataBetweenDates("1/24/20", "1/28/20", "")
 	sort.Sort(ByCountryAndStateAgg(result))
 	if len(result) != 5 {
 		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
@@ -281,7 +331,7 @@ func TestAggregateDataBetweenDates_QueryDates_ToIsOutOfRange(t *testing.T) {
 func TestAggregateDataBetweenDates_QueryDates_FromAndToBothOutOfRange(t *testing.T) {
 	caseCountsCache = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
-	result := aggregateDataBetweenDates("1/21/20", "1/28/20")
+	result, _ := aggregateDataBetweenDates("1/21/20", "1/28/20", "")
 	sort.Sort(ByCountryAndStateAgg(result))
 	if len(result) != 5 {
 		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)

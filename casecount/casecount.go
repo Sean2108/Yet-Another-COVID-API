@@ -2,9 +2,11 @@ package casecount
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -74,30 +76,30 @@ func UpdateCaseCounts() {
 }
 
 // GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
-func GetCaseCounts(from string, to string) []CaseCountsAggregated {
-	if from == "" && to == "" {
+func GetCaseCounts(from string, to string, country string) ([]CaseCountsAggregated, error) {
+	if from == "" && to == "" && country == "" {
 		log.Println("GetCaseCounts query for all data")
-		return allAggregatedData
+		return allAggregatedData, nil
 	}
-	log.Printf("GetCaseCounts query from: %s, to: %s\n", from, to)
-	return aggregateDataBetweenDates(from, to)
+	log.Printf("GetCaseCounts query from: %s, to: %s, country: %s\n", from, to, country)
+	return aggregateDataBetweenDates(from, to, country)
 }
 
 // GetCountryCaseCounts : get case counts for all countries between from date and to date. Return case counts for entire period if from and to dates are empty strings
-func GetCountryCaseCounts(from string, to string) []CountryCaseCountsAggregated {
-	if from == "" && to == "" {
+func GetCountryCaseCounts(from string, to string, country string) ([]CountryCaseCountsAggregated, error) {
+	if from == "" && to == "" && country == "" {
 		log.Println("GetCountryCaseCounts query for all data")
-		return allCountriesAggregatedData
+		return allCountriesAggregatedData, nil
 	}
-	log.Printf("GetCountryCaseCounts query from: %s, to: %s\n", from, to)
-	agg := aggregateDataBetweenDates(from, to)
-	return aggregateCountryDataFromStatesAggregate(agg)
+	log.Printf("GetCountryCaseCounts query from: %s, to: %s, country: %s\n", from, to, country)
+	agg, err := aggregateDataBetweenDates(from, to, country)
+	return aggregateCountryDataFromStatesAggregate(agg), err
 }
 
 func setDateBoundariesAndAllAggregatedData(headerRow []string) {
 	firstDate, _ = time.Parse(inputDateFormat, headerRow[4])
 	lastDate, _ = time.Parse(inputDateFormat, headerRow[len(headerRow)-1])
-	allAggregatedData = aggregateDataBetweenDates("", "")
+	allAggregatedData, _ = aggregateDataBetweenDates("", "", "")
 	allCountriesAggregatedData = aggregateCountryDataFromStatesAggregate(allAggregatedData)
 }
 
@@ -210,19 +212,33 @@ func getStatisticsSum(input []caseCount, fromIndex int, toIndex int) (int, int) 
 	return input[toIndex].Confirmed - confirmedAtStartDate, input[toIndex].Deaths - deathsAtStartDate
 }
 
-func convertToAggregatedElement(caseCountsItem caseCounts, from int, to int, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
-	confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts, from, to)
-	ch <- CaseCountsAggregated{stateInformation{caseCountsItem.State, caseCountsItem.Country, caseCountsItem.Lat, caseCountsItem.Long}, statistics{confirmedSum, deathsSum}}
+func convertToAggregatedElement(caseCountsItem caseCounts, from int, to int, country string, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
+	if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
+		confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts, from, to)
+		ch <- CaseCountsAggregated{stateInformation{caseCountsItem.State, caseCountsItem.Country, caseCountsItem.Lat, caseCountsItem.Long}, statistics{confirmedSum, deathsSum}}
+	}
 	wg.Done()
 }
 
-func aggregateDataBetweenDates(from string, to string) []CaseCountsAggregated {
+func findClosestMatchToCountryName(country string) string {
+	minEditDistance := editDistance([]rune(country), []rune(allCountriesAggregatedData[0].Country))
+	closestMatch := allCountriesAggregatedData[0].Country
+	for _, countryAgg := range allCountriesAggregatedData {
+		if editDistance := editDistance([]rune(country), []rune(countryAgg.Country)); editDistance < minEditDistance {
+			minEditDistance = editDistance
+			closestMatch = countryAgg.Country
+		}
+	}
+	return closestMatch
+}
+
+func aggregateDataBetweenDates(from string, to string, country string) ([]CaseCountsAggregated, error) {
 	fromIndex, toIndex := getFromAndToIndices(from, to)
 	ch := make(chan CaseCountsAggregated, len(caseCountsCache))
 	wg := sync.WaitGroup{}
 	for _, caseCountsItem := range caseCountsCache {
 		wg.Add(1)
-		go convertToAggregatedElement(caseCountsItem, fromIndex, toIndex, ch, &wg)
+		go convertToAggregatedElement(caseCountsItem, fromIndex, toIndex, country, ch, &wg)
 	}
 	wg.Wait()
 	close(ch)
@@ -230,7 +246,11 @@ func aggregateDataBetweenDates(from string, to string) []CaseCountsAggregated {
 	for caseCountsAgg := range ch {
 		aggregatedData = append(aggregatedData, caseCountsAgg)
 	}
-	return aggregatedData
+	var err error
+	if country != "" && len(aggregatedData) == 0 {
+		err = fmt.Errorf("Country %s not found, did you mean: %s?", country, findClosestMatchToCountryName(country))
+	}
+	return aggregatedData, err
 }
 
 func aggregateCountryDataFromStatesAggregate(aggregateDataWithStates []CaseCountsAggregated) []CountryCaseCountsAggregated {

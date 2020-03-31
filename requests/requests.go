@@ -18,18 +18,33 @@ func parseURLQuery(URL *url.URL, key string) string {
 	return result
 }
 
+func checkForCaseCountError(err error, w http.ResponseWriter) bool {
+	if err == nil {
+		return false
+	}
+	http.Error(w, err.Error(), http.StatusBadRequest)
+	return true
+}
+
 // GetCaseCounts : logic when /cases endpoint is called. Returns all aggregated confirmed cases/death counts between from and to dates in the query
 func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.String())
 	from := parseURLQuery(r.URL, "from")
 	to := parseURLQuery(r.URL, "to")
+	country := parseURLQuery(r.URL, "country")
 	var response []byte
 	var err error
 	if parseURLQuery(r.URL, "aggregateCountries") == "true" {
-		caseCounts := casecount.GetCountryCaseCounts(from, to)
+		caseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
+		if checkForCaseCountError(caseCountsErr, w) {
+			return
+		}
 		response, err = json.Marshal(caseCounts)
 	} else {
-		caseCounts := casecount.GetCaseCounts(from, to)
+		caseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
+		if checkForCaseCountError(caseCountsErr, w) {
+			return
+		}
 		response, err = json.Marshal(caseCounts)
 	}
 	if err != nil {
