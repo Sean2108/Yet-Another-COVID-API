@@ -4,14 +4,11 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"sort"
 	"testing"
 	"time"
 )
 
 type mockClient struct{}
-
-var mockedGet func(url string) (*http.Response, error)
 
 func (m *mockClient) Get(url string) (*http.Response, error) {
 	csvStr := "Province/State,Country/Region,Lat,Long,1/22/20,1/23/20,1/24/20\n,Afghanistan,33.0,65.1,2,3,4\n,Albania,41.1533,20.1683,4,5,6\n,Algeria,28.0339,1.6596,7,8,9"
@@ -140,32 +137,5 @@ func TestGetStatisticsSum(t *testing.T) {
 	}
 	if deaths != 4 {
 		t.Errorf("Deaths was not 0, got: %d, want %d.", deaths, 4)
-	}
-}
-
-func verifyResultsCaseCountsArr(result []caseCounts, expectedData []caseCounts, t *testing.T) {
-	sort.Sort(ByCountryAndStateForCaseCounts(result))
-	for i, item := range result {
-		if !item.Equals(expectedData[i]) {
-			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
-		}
-	}
-}
-
-func verifyResultsCaseCountsAgg(result []CaseCountsAggregated, expectedData []CaseCountsAggregated, t *testing.T) {
-	sort.Sort(ByCountryAndStateAgg(result))
-	for i, item := range result {
-		if item != expectedData[i] {
-			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
-		}
-	}
-}
-
-func verifyResultsCountryCaseCountsAgg(result []CountryCaseCountsAggregated, expectedData []CountryCaseCountsAggregated, t *testing.T) {
-	sort.Sort(ByCountryAgg(result))
-	for i, item := range result {
-		if item != expectedData[i] {
-			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
-		}
 	}
 }

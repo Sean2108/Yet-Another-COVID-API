@@ -9,6 +9,14 @@ import (
 	"yet-another-covid-map-api/casecount"
 )
 
+func parseURL(URL *url.URL) (string, string, string, bool) {
+	from := parseURLQuery(URL, "from")
+	to := parseURLQuery(URL, "to")
+	country := parseURLQuery(URL, "country")
+	aggregateCountries := parseURLQuery(URL, "aggregateCountries") == "true"
+	return from, to, country, aggregateCountries
+}
+
 func parseURLQuery(URL *url.URL, key string) string {
 	keys, ok := URL.Query()[key]
 	var result string
@@ -18,34 +26,31 @@ func parseURLQuery(URL *url.URL, key string) string {
 	return result
 }
 
-func checkForCaseCountError(err error, w http.ResponseWriter) bool {
-	if err == nil {
-		return false
+func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool) ([]byte, error, error) {
+	if aggregateCountries {
+		caseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
+		if caseCountsErr != nil {
+			return nil, nil, caseCountsErr
+		}
+		response, err := json.Marshal(caseCounts)
+		return response, err, nil
 	}
-	http.Error(w, err.Error(), http.StatusBadRequest)
-	return true
+	caseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
+	if caseCountsErr != nil {
+		return nil, nil, caseCountsErr
+	}
+	response, err := json.Marshal(caseCounts)
+	return response, err, nil
 }
 
 // GetCaseCounts : logic when /cases endpoint is called. Returns all aggregated confirmed cases/death counts between from and to dates in the query
 func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.String())
-	from := parseURLQuery(r.URL, "from")
-	to := parseURLQuery(r.URL, "to")
-	country := parseURLQuery(r.URL, "country")
-	var response []byte
-	var err error
-	if parseURLQuery(r.URL, "aggregateCountries") == "true" {
-		caseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
-		if checkForCaseCountError(caseCountsErr, w) {
-			return
-		}
-		response, err = json.Marshal(caseCounts)
-	} else {
-		caseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
-		if checkForCaseCountError(caseCountsErr, w) {
-			return
-		}
-		response, err = json.Marshal(caseCounts)
+	from, to, country, aggregateCountries := parseURL(r.URL)
+	response, err, caseCountsErr := getCaseCountsResponse(from, to, country, aggregateCountries)
+	if caseCountsErr != nil {
+		http.Error(w, caseCountsErr.Error(), http.StatusBadRequest)
+		return
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
