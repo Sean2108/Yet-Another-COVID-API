@@ -10,26 +10,27 @@ import (
 func TestParseUrlQuery(t *testing.T) {
 	tables := []struct {
 		rawurl             string
+		getAbbreviation    bool
 		from               string
 		to                 string
 		country            string
 		aggregateCountries bool
 	}{
-		{"http://localhost:8080/cases", "", "", "", false},
-		{"http://localhost:8080/cases?from=&to=1/1/20", "", "1/1/20", "", false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20", "1/1/20", "1/2/20", "", false},
-		{"http://localhost:8080/cases?from=&to=1/1/20", "", "1/1/20", "", false},
-		{"http://localhost:8080/cases?from=&to=", "", "", "", false},
-		{"http://localhost:8080/cases?from=&to=&country=United Kingdom", "", "", "United Kingdom", false},
-		{"http://localhost:8080/cases?country=United Kingdom", "", "", "United Kingdom", false},
-		{"http://localhost:8080/cases?aggregateCountries=true", "", "", "", true},
-		{"http://localhost:8080/cases?aggregateCountries=tru", "", "", "", false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true", "1/1/20", "1/2/20", "Singapore", true},
+		{"http://localhost:8080/cases", false, "", "", "", false},
+		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20", false, "1/1/20", "1/2/20", "", false},
+		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false},
+		{"http://localhost:8080/cases?from=&to=&country=CN", false, "", "", "China", false},
+		{"http://localhost:8080/cases?from=&to=&country=gb", false, "", "", "United Kingdom", false},
+		{"http://localhost:8080/cases?country=United Kingdom", false, "", "", "United Kingdom", false},
+		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", false, "", "", "Singapore", true},
+		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", true, "", "", "sg", false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true", false, "1/1/20", "1/2/20", "Singapore", true},
 	}
 
 	for _, table := range tables {
 		url, _ := url.Parse(table.rawurl)
-		from, to, country, aggregateCountries := parseURL(url)
+		from, to, country, aggregateCountries := parseURL(url, table.getAbbreviation)
 		if from != table.from {
 			t.Errorf("result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, from, table.from)
 		}
