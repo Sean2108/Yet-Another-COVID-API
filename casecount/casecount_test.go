@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"yet-another-covid-map-api/dateformat"
 )
 
 type mockClient struct{}
@@ -47,10 +49,10 @@ func getTestCacheData() []caseCounts {
 func TestUpdateCaseCounts(t *testing.T) {
 	client = &mockClient{}
 	UpdateCaseCounts()
-	if firstDate.Format(inputDateFormat) != "1/22/20" {
+	if firstDate.Format(dateformat.CasesDateFormat) != "1/22/20" {
 		t.Errorf("Value of firstDate is incorrect, got: %s, want %s.", firstDate, "1/22/20")
 	}
-	if lastDate.Format(inputDateFormat) != "1/24/20" {
+	if lastDate.Format(dateformat.CasesDateFormat) != "1/24/20" {
 		t.Errorf("Value of lastDate is incorrect, got: %s, want %s.", lastDate, "1/24/20")
 	}
 	expectedCaseCounts := getTestCacheData()

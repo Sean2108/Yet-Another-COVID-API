@@ -3,6 +3,8 @@ package casecount
 import (
 	"encoding/csv"
 	"time"
+
+	"yet-another-covid-map-api/dateformat"
 	"yet-another-covid-map-api/utils"
 )
 
@@ -64,8 +66,8 @@ func getFromAndToIndices(from string, to string) (int, int) {
 	if from == "" && to == "" {
 		return fromIndex, toIndex
 	}
-	fromDate, fromError := time.Parse(inputDateFormat, from)
-	toDate, toError := time.Parse(inputDateFormat, to)
+	fromDate, fromError := time.Parse(dateformat.CasesDateFormat, from)
+	toDate, toError := time.Parse(dateformat.CasesDateFormat, to)
 	if fromError == nil && fromDate.After(firstDate) {
 		fromIndex = getDaysBetweenDates(firstDate, fromDate)
 	}

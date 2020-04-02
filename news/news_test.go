@@ -24,16 +24,18 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 func TestFormURLQuery(t *testing.T) {
 	apiKey = "testkey"
 	tables := []struct {
+		from     string
+		to       string
 		country  string
 		expected string
 	}{
-		{"", "https://newsapi.org/v2/top-headlines?apiKey=testkey&q=virus&language=en"},
-		{"sg", "https://newsapi.org/v2/top-headlines?apiKey=testkey&q=virus&language=en&country=sg"},
-		{"us", "https://newsapi.org/v2/top-headlines?apiKey=testkey&q=virus&language=en&country=us"},
+		{"2020-01-02", "2020-01-03", "", "https://newsapi.org/v2/top-headlines?apiKey=testkey&q=virus&language=en&from=2020-01-02&to=2020-01-03"},
+		{"", "", "sg", "https://newsapi.org/v2/top-headlines?apiKey=testkey&q=virus&language=en&country=sg"},
+		{"2020-01-02", "", "us", "https://newsapi.org/v2/top-headlines?apiKey=testkey&q=virus&language=en&from=2020-01-02&country=us"},
 	}
 
 	for _, table := range tables {
-		result := formURLQuery(table.country)
+		result := formURLQuery(table.from, table.to, table.country)
 		if result != table.expected {
 			t.Errorf("Result of formUrlQuery was incorrect, got: %s, want: %s.", result, table.expected)
 		}
@@ -42,7 +44,7 @@ func TestFormURLQuery(t *testing.T) {
 
 func TestGetNews(t *testing.T) {
 	client = &mockClient{}
-	result, _ := GetNews("sg")
+	result, _ := GetNews("", "", "sg")
 	expected := []Article{
 		Article{"Google News", "headline", "desc", "testUrl", "imgUrl", "2020-04-02T01:01:22Z"},
 		Article{"Google News2", "headline2", "desc2", "testUrl2", "imgUrl2", "2020-04-02T02:01:22Z"},

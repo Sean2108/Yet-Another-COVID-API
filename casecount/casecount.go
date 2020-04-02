@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"yet-another-covid-map-api/dateformat"
 	"yet-another-covid-map-api/utils"
 )
 
@@ -52,9 +54,8 @@ type CountryCaseCountsAggregated struct {
 }
 
 const (
-	inputDateFormat = "1/2/06"
-	confirmedURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
-	deathsURL       = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+	confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+	deathsURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 )
 
 var (
@@ -105,8 +106,8 @@ func GetCountryCaseCounts(from string, to string, country string) ([]CountryCase
 }
 
 func setDateBoundariesAndAllAggregatedData(headerRow []string) {
-	firstDate, _ = time.Parse(inputDateFormat, headerRow[4])
-	lastDate, _ = time.Parse(inputDateFormat, headerRow[len(headerRow)-1])
+	firstDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[4])
+	lastDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[len(headerRow)-1])
 	allAggregatedData, _ = aggregateDataBetweenDates("", "", "")
 	allCountriesAggregatedData = aggregateCountryDataFromStatesAggregate(allAggregatedData)
 }

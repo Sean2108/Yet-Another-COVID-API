@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 	"yet-another-covid-map-api/casecount"
+	"yet-another-covid-map-api/dateformat"
 )
 
 func TestParseUrlQuery(t *testing.T) {
@@ -30,7 +31,7 @@ func TestParseUrlQuery(t *testing.T) {
 
 	for _, table := range tables {
 		url, _ := url.Parse(table.rawurl)
-		from, to, country, aggregateCountries := parseURL(url, table.getAbbreviation)
+		from, to, country, aggregateCountries, _ := parseURL(url, table.getAbbreviation, dateformat.CasesDateFormat)
 		if from != table.from {
 			t.Errorf("result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, from, table.from)
 		}

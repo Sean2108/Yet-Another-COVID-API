@@ -7,13 +7,24 @@ import (
 	"net/url"
 
 	"yet-another-covid-map-api/casecount"
+	"yet-another-covid-map-api/dateformat"
 	"yet-another-covid-map-api/news"
 )
 
-func parseURL(URL *url.URL, getAbbreviation bool) (string, string, string, bool) {
+func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool) {
 	from := parseURLQuery(URL, "from")
 	to := parseURLQuery(URL, "to")
 	country := parseURLQuery(URL, "country")
+
+	from, ok := dateformat.FormatDate(dateFormat, from)
+	if !ok {
+		return "", "", "", false, false
+	}
+	to, ok = dateformat.FormatDate(dateFormat, to)
+	if !ok {
+		return "", "", "", false, false
+	}
+
 	var countryLookupFuncToCall func(string) (string, bool)
 	if getAbbreviation {
 		countryLookupFuncToCall = getAbbreviationFromCountry
@@ -24,7 +35,8 @@ func parseURL(URL *url.URL, getAbbreviation bool) (string, string, string, bool)
 		country = countryFromAbbr
 	}
 	aggregateCountries := parseURLQuery(URL, "aggregateCountries") == "true"
-	return from, to, country, aggregateCountries
+
+	return from, to, country, aggregateCountries, true
 }
 
 func parseURLQuery(URL *url.URL, key string) string {
@@ -56,7 +68,11 @@ func getCaseCountsResponse(from string, to string, country string, aggregateCoun
 // GetCaseCounts : logic when /cases endpoint is called. Returns all aggregated confirmed cases/death counts between from and to dates in the query
 func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.String())
-	from, to, country, aggregateCountries := parseURL(r.URL, false)
+	from, to, country, aggregateCountries, ok := parseURL(r.URL, false, dateformat.CasesDateFormat)
+	if !ok {
+		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
+		return
+	}
 	response, err, caseCountsErr := getCaseCountsResponse(from, to, country, aggregateCountries)
 	if caseCountsErr != nil {
 		http.Error(w, caseCountsErr.Error(), http.StatusBadRequest)
@@ -73,8 +89,12 @@ func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
 // GetNewsForCountry : TODO, runs query to get all virus related news for a given country
 func GetNewsForCountry(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.String())
-	_, _, country, _ := parseURL(r.URL, true)
-	articles, newsErr := news.GetNews(country)
+	from, to, country, _, ok := parseURL(r.URL, true, dateformat.NewsDateFormat)
+	if !ok {
+		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
+		return
+	}
+	articles, newsErr := news.GetNews(from, to, country)
 	if newsErr != nil {
 		http.Error(w, newsErr.Error(), http.StatusInternalServerError)
 		return

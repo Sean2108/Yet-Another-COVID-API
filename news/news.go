@@ -76,12 +76,16 @@ func readJSONFromURL(url string) (newsResponse, error) {
 	return response, decodeErr
 }
 
-func formURLQuery(country string) string {
-	var countryQuery string
-	if country != "" {
-		countryQuery = "&country=" + country
+func formSingleURLQuery(queryName string, value string) string {
+	if value != "" {
+		return fmt.Sprintf("&%s=%s", queryName, value)
 	}
-	return fmt.Sprintf("%s?apiKey=%s&q=virus&language=en%s", newsAPIHeadlinesURL, apiKey, countryQuery)
+	return ""
+}
+
+func formURLQuery(from string, to string, country string) string {
+	return fmt.Sprintf("%s?apiKey=%s&q=virus&language=en%s%s%s", newsAPIHeadlinesURL, apiKey,
+		formSingleURLQuery("from", from), formSingleURLQuery("to", to), formSingleURLQuery("country", country))
 }
 
 func formatArticle(input inputArticle, ch chan Article, wg *sync.WaitGroup) {
@@ -107,8 +111,10 @@ func formatResponse(input []inputArticle) []Article {
 }
 
 // GetNews : get coronavirus related headlines for the country passed in the parameter and return them
-func GetNews(country string) ([]Article, error) {
-	urlQuery := formURLQuery(strings.ToLower(country))
+func GetNews(from string, to string, country string) ([]Article, error) {
+	urlQuery := formURLQuery(from, to, strings.ToLower(country))
 	response, err := readJSONFromURL(urlQuery)
+	log.Println(response)
+	log.Println(err)
 	return formatResponse(response.Articles), err
 }
