@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"yet-another-covid-map-api/casecount"
+	"yet-another-covid-map-api/news"
 )
 
 func parseURL(URL *url.URL, getAbbreviation bool) (string, string, string, bool) {
@@ -61,6 +62,24 @@ func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, caseCountsErr.Error(), http.StatusBadRequest)
 		return
 	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+}
+
+// GetNewsForCountry : TODO, runs query to get all virus related news for a given country
+func GetNewsForCountry(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL.String())
+	_, _, country, _ := parseURL(r.URL, true)
+	articles, newsErr := news.GetNews(country)
+	if newsErr != nil {
+		http.Error(w, newsErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(articles)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

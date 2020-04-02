@@ -15,6 +15,7 @@ var port string
 
 func setupRoutes() {
 	http.HandleFunc("/cases", requests.GetCaseCounts)
+	http.HandleFunc("/news", requests.GetNewsForCountry)
 }
 
 func init() {

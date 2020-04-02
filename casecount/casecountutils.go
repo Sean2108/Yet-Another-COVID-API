@@ -3,6 +3,7 @@ package casecount
 import (
 	"encoding/csv"
 	"time"
+	"yet-another-covid-map-api/utils"
 )
 
 func readCSVFromURL(url string) ([][]string, error) {
@@ -46,10 +47,10 @@ func getStatisticsSum(input []caseCount, fromIndex int, toIndex int) (int, int) 
 }
 
 func findClosestMatchToCountryName(country string) string {
-	minEditDistance := editDistance([]rune(country), []rune(allCountriesAggregatedData[0].Country))
+	minEditDistance := utils.EditDistance([]rune(country), []rune(allCountriesAggregatedData[0].Country))
 	closestMatch := allCountriesAggregatedData[0].Country
 	for _, countryAgg := range allCountriesAggregatedData {
-		if editDistance := editDistance([]rune(country), []rune(countryAgg.Country)); editDistance < minEditDistance {
+		if editDistance := utils.EditDistance([]rune(country), []rune(countryAgg.Country)); editDistance < minEditDistance {
 			minEditDistance = editDistance
 			closestMatch = countryAgg.Country
 		}

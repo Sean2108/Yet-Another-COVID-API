@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"yet-another-covid-map-api/utils"
 )
 
 type statistics struct {
@@ -50,11 +51,6 @@ type CountryCaseCountsAggregated struct {
 	statistics
 }
 
-// HTTPClient : Interface to mock net/http client
-type HTTPClient interface {
-	Get(url string) (*http.Response, error)
-}
-
 const (
 	inputDateFormat = "1/2/06"
 	confirmedURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
@@ -70,7 +66,7 @@ var (
 	lastDate        time.Time
 	firstDate       time.Time
 
-	client HTTPClient
+	client utils.HTTPClient
 )
 
 func init() {

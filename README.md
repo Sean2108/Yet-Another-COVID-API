@@ -15,4 +15,4 @@ Deployed at https://yet-another-covid-api.herokuapp.com.
 - Call the endpoint with country name in the field 'country' to extract the numbers of confirmed cases and deaths for all states in the country. For example, https://yet-another-covid-api.herokuapp.com/cases?country=Singapore
 
 /news:
-- WIP: Get news for country in the field to extract the latest coronavirus news for that country. Will use the News API (https://newsapi.org/) for obtaining this information.
+- Get news for country in the field to extract the latest coronavirus news for that country. Will use the News API (https://newsapi.org/) for obtaining this information.
