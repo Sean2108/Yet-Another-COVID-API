@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -46,11 +47,15 @@ type newsResponse struct {
 }
 
 // Please populate this field with your own News API key
-var apiKey string = ""
+var apiKey string
 
-const newsAPIHeadlinesURL string = "https://newsapi.org/v2/top-headlines"
+const (
+	newsEnvironmentVar  string = "NEWS_API_KEY"
+	newsAPIHeadlinesURL string = "https://newsapi.org/v2/top-headlines"
+)
 
 func init() {
+	apiKey := os.Getenv(newsEnvironmentVar)
 	if apiKey == "" {
 		log.Fatal("News API key is not populated! Please add paste your apiKey in the apiKey variable in the file news/news.go.")
 	}
