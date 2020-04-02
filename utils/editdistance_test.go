@@ -14,7 +14,7 @@ func TestEditDistance(t *testing.T) {
 		{"test", "test", 0},
 		{"testt", "tst", 2},
 		{"abcd", "bcde", 2},
-		{"", "", 2},
+		{"", "", 0},
 	}
 
 	for _, table := range tables {
