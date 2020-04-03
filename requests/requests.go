@@ -11,6 +11,12 @@ import (
 	"yet-another-covid-map-api/news"
 )
 
+type writer interface {
+	Header() http.Header
+	Write([]byte) (int, error)
+	WriteHeader(statusCode int)
+}
+
 func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool) {
 	from := parseURLQuery(URL, "from")
 	to := parseURLQuery(URL, "to")
@@ -65,45 +71,38 @@ func getCaseCountsResponse(from string, to string, country string, aggregateCoun
 	return response, err, nil
 }
 
-// GetCaseCounts : logic when /cases endpoint is called. Returns all aggregated confirmed cases/death counts between from and to dates in the query
-func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL.String())
-	from, to, country, aggregateCountries, ok := parseURL(r.URL, false, dateformat.CasesDateFormat)
+func getNewsForCountryResponse(from string, to string, country string, _ bool) ([]byte, error, error) {
+	articles, newsErr := news.GetNews(from, to, country)
+	response, err := json.Marshal(articles)
+	return response, err, newsErr
+}
+
+func getResponse(getDataFn func(from string, to string, country string, aggregateCountries bool) ([]byte, error, error), w writer, URL *url.URL) {
+	log.Println(URL.String())
+	from, to, country, aggregateCountries, ok := parseURL(URL, false, dateformat.CasesDateFormat)
 	if !ok {
 		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
 		return
 	}
-	response, err, caseCountsErr := getCaseCountsResponse(from, to, country, aggregateCountries)
-	if caseCountsErr != nil {
-		http.Error(w, caseCountsErr.Error(), http.StatusBadRequest)
+	response, jsonErr, internalErr := getDataFn(from, to, country, aggregateCountries)
+	if internalErr != nil {
+		http.Error(w, internalErr.Error(), http.StatusBadRequest)
 		return
 	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if jsonErr != nil {
+		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
 
-// GetNewsForCountry : TODO, runs query to get all virus related news for a given country
+// GetCaseCounts : logic when /cases endpoint is called. Returns all aggregated confirmed cases/death counts between from and to dates in the query
+func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
+	getResponse(getCaseCountsResponse, w, r.URL)
+}
+
+// GetNewsForCountry : runs query to get all virus related news for a given country
 func GetNewsForCountry(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL.String())
-	from, to, country, _, ok := parseURL(r.URL, true, dateformat.NewsDateFormat)
-	if !ok {
-		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
-		return
-	}
-	articles, newsErr := news.GetNews(from, to, country)
-	if newsErr != nil {
-		http.Error(w, newsErr.Error(), http.StatusInternalServerError)
-		return
-	}
-	response, err := json.Marshal(articles)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	getResponse(getNewsForCountryResponse, w, r.URL)
 }

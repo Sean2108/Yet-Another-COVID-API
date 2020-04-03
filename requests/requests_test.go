@@ -1,12 +1,38 @@
 package requests
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 	"yet-another-covid-map-api/casecount"
 	"yet-another-covid-map-api/dateformat"
 )
+
+var (
+	fakeResponse []byte
+	testFnCalled bool
+)
+
+type fakeWriter struct{}
+
+func (w *fakeWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (w *fakeWriter) Write(response []byte) (int, error) {
+	fakeResponse = response
+	return 0, nil
+}
+
+func (w *fakeWriter) WriteHeader(statusCode int) {
+	return
+}
+
+func callTestFn(from string, to string, country string, aggregateCountries bool) ([]byte, error, error) {
+	testFnCalled = true
+	return []byte("response"), nil, nil
+}
 
 func TestParseUrlQuery(t *testing.T) {
 	tables := []struct {
@@ -103,5 +129,31 @@ func TestGetCaseCountsResponse_DoNotAggregateCountriesFailed(t *testing.T) {
 	}
 	if caseCountErr == nil || !strings.Contains(caseCountErr.Error(), "Singapore") {
 		t.Errorf("caseCountErr should be null, got: %s, want: string containing Singapore.", caseCountErr.Error())
+	}
+}
+
+func TestGetResponse(t *testing.T) {
+	fakeResponse = []byte("")
+	testFnCalled = false
+	inputURL, _ := url.Parse("http://localhost:8080/cases?country=sg")
+	getResponse(callTestFn, &fakeWriter{}, inputURL)
+	if !testFnCalled {
+		t.Error("callTestFn should have been called, but it was not.")
+	}
+	if string(fakeResponse) != "response" {
+		t.Errorf("fakeResponse should have been modified, got: %s, want: response", fakeResponse)
+	}
+}
+
+func TestGetResponse_shouldFailWhenDateIsMalformed(t *testing.T) {
+	fakeResponse = []byte("")
+	testFnCalled = false
+	inputURL, _ := url.Parse("http://localhost:8080/cases?from=3/32/20")
+	getResponse(callTestFn, &fakeWriter{}, inputURL)
+	if testFnCalled {
+		t.Error("callTestFn should not have been called, but it was.")
+	}
+	if !strings.Contains(string(fakeResponse), "Date format is not recognised") {
+		t.Errorf("fakeResponse did not contain the correct error message, got: %s, want: string containing message about date format not recognised", fakeResponse)
 	}
 }
