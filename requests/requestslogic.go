@@ -115,7 +115,7 @@ func writeLandingPageHTML(w http.ResponseWriter) {
 				Call the endpoint with no query information (<a href=https://yet-another-covid-api.herokuapp.com/cases>/cases</a>) to get the numbers of all confirmed cases and deaths for each state and country.
 			</li>
 			<li>
-				Call the endpoint with attributes 'from' and/or 'to' to get the numbers of all confirmed cases and deaths for each state and country between the from date and to date. These dates should be in the format YYYY-MM-DD or M/D/YY, for example <a href=https://yet-another-covid-api.herokuapp.com/cases?from=2/2/20&to=2/10/20>/cases?from=2/2/20&to=2/10/20</a>.
+				Call the endpoint with attributes 'from' and/or 'to' to get the numbers of all confirmed cases and deaths for each state and country between the from date and to date. These dates should be in the format YYYY-MM-DD or M/D/YY, for example <a href=https://yet-another-covid-api.herokuapp.com/cases?from=3/2/20&to=3/10/20>/cases?from=3/2/20&to=3/10/20</a>.
 			</li>
 			<li>
 				Call the endpoint with attribute 'aggregateCountries' set to true to aggregate the counts to the country level instead of the state level. For example, <a href=https://yet-another-covid-api.herokuapp.com/cases?aggregateCountries=true>/cases?aggregateCountries=true</a>.
@@ -130,7 +130,7 @@ func writeLandingPageHTML(w http.ResponseWriter) {
 				Get news for country in the field to extract the latest coronavirus news for that country. Will use the News API (<a href=https://newsapi.org>https://newsapi.org</a>) for obtaining this information. For example, <a href=https://yet-another-covid-api.herokuapp.com/news?country=Singapore>/news?country=Singapore</a>.
 			</li>
 			<li>
-				Call the endpoint with attributes 'from' and/or 'to' to get the news between the from date and to date. For example <a href=https://yet-another-covid-api.herokuapp.com/news?from=2/2/20&to=2/10/20&country=us>/news?from=2/2/20&to=2/10/20&country=us</a>.
+				Call the endpoint with attributes 'from' and/or 'to' to get the news between the from date and to date. For example <a href=https://yet-another-covid-api.herokuapp.com/news?from=3/2/20&to=3/10/20&country=us>/news?from=3/2/20&to=3/10/20&country=us</a>.
 			</li>
 		</ul>
 		<h4>Allowed date formats:</h4>
