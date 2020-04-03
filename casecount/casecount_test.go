@@ -133,11 +133,28 @@ func TestGetStatisticsSum(t *testing.T) {
 		caseCount{"b", statistics{4, 2}},
 		caseCount{"c", statistics{7, 5}},
 	}
-	confirmed, deaths := getStatisticsSum(input, 1, 2)
-	if confirmed != 5 {
-		t.Errorf("Confirmed was not correct, got: %d, want %d.", confirmed, 5)
+
+	tables := []struct {
+		fromIndex         int
+		toIndex           int
+		expectedComfirmed int
+		expectedDeaths    int
+	}{
+		{1, 2, 5, 4},
+		{-1, 2, 7, 5},
+		{1, 3, 5, 4},
+		{-2, -1, 0, 0},
+		{3, 4, 0, 0},
+		{2, 3, 3, 3},
 	}
-	if deaths != 4 {
-		t.Errorf("Deaths was not 0, got: %d, want %d.", deaths, 4)
+
+	for _, table := range tables {
+		confirmed, deaths := getStatisticsSum(input, table.fromIndex, table.toIndex)
+		if confirmed != table.expectedComfirmed {
+			t.Errorf("Confirmed was not correct, got: %d, want %d.", confirmed, table.expectedComfirmed)
+		}
+		if deaths != table.expectedDeaths {
+			t.Errorf("Deaths was not 0, got: %d, want %d.", deaths, table.expectedDeaths)
+		}
 	}
 }

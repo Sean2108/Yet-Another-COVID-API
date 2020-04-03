@@ -55,7 +55,7 @@ const (
 )
 
 func init() {
-	apiKey := os.Getenv(newsEnvironmentVar)
+	apiKey = os.Getenv(newsEnvironmentVar)
 	if apiKey == "" {
 		log.Fatal("News API key is not populated! Please add paste your apiKey in the apiKey variable in the file news/news.go.")
 	}
@@ -114,7 +114,5 @@ func formatResponse(input []inputArticle) []Article {
 func GetNews(from string, to string, country string) ([]Article, error) {
 	urlQuery := formURLQuery(from, to, strings.ToLower(country))
 	response, err := readJSONFromURL(urlQuery)
-	log.Println(response)
-	log.Println(err)
 	return formatResponse(response.Articles), err
 }

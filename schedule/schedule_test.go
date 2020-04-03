@@ -5,6 +5,19 @@ import (
 	"time"
 )
 
+var functionCalled bool
+
+func TestCallFunctionDaily_CallsFunction(t *testing.T) {
+	functionCalled = false
+	testFn := func() {
+		functionCalled = true
+	}
+	CallFunctionDaily(testFn, 1)
+	if !functionCalled {
+		t.Error("Function was not called.")
+	}
+}
+
 func TestGetTimeTillUpdate(t *testing.T) {
 	tables := []struct {
 		now      time.Time

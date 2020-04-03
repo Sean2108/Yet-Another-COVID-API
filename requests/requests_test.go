@@ -26,7 +26,10 @@ func TestParseUrlQuery(t *testing.T) {
 		{"http://localhost:8080/cases?country=United Kingdom", false, "", "", "United Kingdom", false},
 		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", false, "", "", "Singapore", true},
 		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", true, "", "", "sg", false},
+		{"http://localhost:8080/cases?aggregateCountries=tru&country=Sngapore", true, "", "", "Sngapore", false},
 		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true", false, "1/1/20", "1/2/20", "Singapore", true},
+		{"http://localhost:8080/cases?from=1/32/20&to=1/2/20&country=Singapore&aggregateCountries=true", false, "", "", "", false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/32/20&country=Singapore&aggregateCountries=true", false, "", "", "", false},
 	}
 
 	for _, table := range tables {
