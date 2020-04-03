@@ -10,10 +10,20 @@ Deployed at https://yet-another-covid-api.herokuapp.com.
 ## Endpoints:
 /cases:
 - Call the endpoint with no query information (https://yet-another-covid-api.herokuapp.com/cases) to get the numbers of all confirmed cases and deaths for each state and country. 
-- Call the endpoint with attributes 'from' and/or 'to' to get the numbers of all confirmed cases and deaths for each state and country between the from date and to date. These dates should be in the format YYYY-MM-DD or M/D/YY, for example https://yet-another-covid-api.herokuapp.com/cases?from=2/2/20&to=2/10/20.
-- Call the endpoint with attribute 'aggregateCountries' set to true to aggregate the counts to the country level instead of the state level. For example, https://yet-another-covid-api.herokuapp.com/cases?aggregateCountries=true
-- Call the endpoint with country name in the field 'country' to extract the numbers of confirmed cases and deaths for all states in the country. For example, https://yet-another-covid-api.herokuapp.com/cases?country=Singapore
+- Call the endpoint with attributes 'from' and/or 'to' to get the numbers of all confirmed cases and deaths for each state and country between the from date and to date. For example https://yet-another-covid-api.herokuapp.com/cases?from=2/2/20&to=2/10/20.
+- Call the endpoint with attribute 'aggregateCountries' set to true to aggregate the counts to the country level instead of the state level. For example, https://yet-another-covid-api.herokuapp.com/cases?aggregateCountries=true.
+- Call the endpoint with country name in the field 'country' to extract the numbers of confirmed cases and deaths for all states in the country. For example, https://yet-another-covid-api.herokuapp.com/cases?country=Singapore.
 
 /news:
-- Get news for country in the field to extract the latest coronavirus news for that country. Will use the News API (https://newsapi.org/) for obtaining this information.
-- Call the endpoint with attributes 'from' and/or 'to' to get the news between the from date and to date. These dates should be in the format YYYY-MM-DD or M/D/YY, for example https://yet-another-covid-api.herokuapp.com/news?from=2/2/20&to=2/10/20&country=us
+- Get news for country in the field to extract the latest coronavirus news for that country. Will use the News API (https://newsapi.org/) for obtaining this information. For example, https://yet-another-covid-api.herokuapp.com/news?country=Singapore
+- Call the endpoint with attributes 'from' and/or 'to' to get the news between the from date and to date. For example https://yet-another-covid-api.herokuapp.com/news?from=2/2/20&to=2/10/20&country=us.
+
+Allowed date formats:
+- MM/DD/YY
+- MM/DD/YYYY
+- YYYY/MM/DD
+- YY/MM/DD
+You can use either / or - as the date delimiters.
+
+Allowed country formats:
+You can use the full name or the short 2 letter ISO 3166 Alpha-2 code to identify countries.

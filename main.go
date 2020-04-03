@@ -14,6 +14,7 @@ import (
 var port string
 
 func setupRoutes() {
+	http.HandleFunc("/", requests.GetLandingPage)
 	http.HandleFunc("/cases", requests.GetCaseCounts)
 	http.HandleFunc("/news", requests.GetNewsForCountry)
 }

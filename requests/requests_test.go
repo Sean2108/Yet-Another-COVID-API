@@ -157,3 +157,15 @@ func TestGetResponse_shouldFailWhenDateIsMalformed(t *testing.T) {
 		t.Errorf("fakeResponse did not contain the correct error message, got: %s, want: string containing message about date format not recognised", fakeResponse)
 	}
 }
+
+func TestGetLandingPage(t *testing.T) {
+	fakeResponse = []byte("")
+	GetLandingPage(&fakeWriter{}, &http.Request{})
+	fakeResponseStr := string(fakeResponse)
+	if fakeResponseStr == "" {
+		t.Error("fakeResponse should not be empty.")
+	}
+	if fakeResponseStr[0] != '<' || fakeResponseStr[len(fakeResponseStr)-1] != '>' {
+		t.Errorf("fakeResponse should start and end with HTML tags, got: %s", fakeResponseStr)
+	}
+}
