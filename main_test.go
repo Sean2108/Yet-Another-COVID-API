@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sort"
 	"testing"
+	"time"
 
 	"yet-another-covid-map-api/casecount"
 )
@@ -43,10 +44,8 @@ func verifyData(allItem casecount.CaseCountsAggregated, queriedItem casecount.Ca
 }
 
 func TestCasesEndpoint(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
 	go main()
+	time.Sleep(5 * time.Second)
 	allAggregatedData := getData("http://localhost:"+port+"/cases", t)
 	if len(allAggregatedData) == 0 {
 		t.Errorf("Response has no items.")
