@@ -1,35 +1,5 @@
 package casecount
 
-func (a *CaseCounts) equals(b CaseCounts) bool {
-	if a.State != b.State || a.Country != b.Country || a.Lat != b.Lat || a.Long != b.Long {
-		return false
-	}
-	if len(a.Counts) != len(b.Counts) {
-		return false
-	}
-	for i, item := range a.Counts {
-		if item != b.Counts[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func (a *CountryCaseCounts) equals(b CountryCaseCounts) bool {
-	if a.Country != b.Country || int(a.Lat) != int(b.Lat) || int(a.Long) != int(b.Long) {
-		return false
-	}
-	if len(a.Counts) != len(b.Counts) {
-		return false
-	}
-	for i, item := range a.Counts {
-		if item != b.Counts[i] {
-			return false
-		}
-	}
-	return true
-}
-
 // ByCountryAndStateForCaseCounts : comparator to sort by country and state for case counts unaggregated, for testing
 type ByCountryAndStateForCaseCounts []CaseCounts
 

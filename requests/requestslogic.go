@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"yet-another-covid-map-api/casecount"
 	"yet-another-covid-map-api/dateformat"
 	"yet-another-covid-map-api/news"
@@ -39,19 +40,20 @@ func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, st
 	if countryFromAbbr, ok := countryLookupFuncToCall(country); ok {
 		country = countryFromAbbr
 	}
-	aggregateCountries := parseURLQuery(URL, "aggregateCountries") == "true"
-	perDay := parseURLQuery(URL, "perDay") == "true"
+	aggregateCountries := parseURLQuery(URL, "aggregatecountries") == "true"
+	perDay := parseURLQuery(URL, "perday") == "true"
 
 	return from, to, country, aggregateCountries, perDay, true
 }
 
 func parseURLQuery(URL *url.URL, key string) string {
-	keys, ok := URL.Query()[key]
-	var result string
-	if ok && len(keys) > 0 {
-		result = keys[0]
+	query := URL.Query()
+	for k, v := range query {
+		if strings.ToLower(k) == key && len(v) > 0 {
+			return v[0]
+		}
 	}
-	return result
+	return ""
 }
 
 func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error) {

@@ -52,6 +52,7 @@ func TestParseUrlQuery(t *testing.T) {
 		{"http://localhost:8080/cases?from=&to=&country=gb", false, "", "", "United Kingdom", false, false},
 		{"http://localhost:8080/cases?country=United Kingdom", false, "", "", "United Kingdom", false, false},
 		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", false, "", "", "Singapore", true, false},
+		{"http://localhost:8080/cases?aggregatecountries=true&country=sg", false, "", "", "Singapore", true, false},
 		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", true, "", "", "sg", false, false},
 		{"http://localhost:8080/cases?aggregateCountries=tru&country=Sngapore", true, "", "", "Sngapore", false, false},
 		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true&perDay=false", false, "1/1/20", "1/2/20", "Singapore", true, false},
