@@ -27,4 +27,4 @@ Allowed date formats:
 You can use either / or - as the date delimiters.
 
 Allowed country formats:
-You can use the full name or the short 2 letter ISO 3166 Alpha-2 code to identify countries.
+You can use the full name or the short 2 letter ISO 3166 Alpha-2 code to identify countries. For example, SG and Singapore are equivalent. This is case insensitive.
