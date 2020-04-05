@@ -36,8 +36,15 @@ type countryInformation struct {
 	Long    float32
 }
 
-type caseCounts struct {
+// CaseCounts : contains information about the state,country and latitude longitude as well as the per day cumulative number of confirmed cases/deaths
+type CaseCounts struct {
 	stateInformation
+	Counts []caseCount
+}
+
+// CountryCaseCounts : contains information about the state,country and latitude longitude as well as the per day cumulative number of confirmed cases/deaths
+type CountryCaseCounts struct {
+	countryInformation
 	Counts []caseCount
 }
 
@@ -63,9 +70,10 @@ var (
 	allAggregatedData          []CaseCountsAggregated
 	allCountriesAggregatedData []CountryCaseCountsAggregated
 
-	caseCountsCache []caseCounts
-	lastDate        time.Time
-	firstDate       time.Time
+	caseCountsCache        []CaseCounts
+	countryCaseCountsCache []CountryCaseCounts
+	lastDate               time.Time
+	firstDate              time.Time
 
 	client utils.HTTPClient
 )
@@ -84,14 +92,25 @@ func UpdateCaseCounts() {
 	setDateBoundariesAndAllAggregatedData(headerRow)
 }
 
-// GetCaseCountsWithDayData : get case counts for all states and all countries but without aggregating the counts, so a list of days with number of confirmed cases and deaths on each day is returned
-func GetCaseCountsWithDayData(from string, to string, country string) ([]caseCounts, error) {
+// GetCaseCountsWithDayData : get case counts for states but without aggregating the counts, so a list of days with number of confirmed cases and deaths on each day is returned
+func GetCaseCountsWithDayData(from string, to string, country string) ([]CaseCounts, error) {
 	if from == "" && to == "" && country == "" {
 		log.Println("GetCaseCounts query for all data with per day information")
 		return caseCountsCache, nil
 	}
 	log.Printf("GetCaseCountsWithDayData query from: %s, to: %s, country: %s\n", from, to, country)
 	return filterCaseCounts(from, to, country)
+}
+
+// GetCountryCaseCountsWithDayData : get case counts for countries but without aggregating the counts, so a list of days with number of confirmed cases and deaths on each day is returned
+func GetCountryCaseCountsWithDayData(from string, to string, country string) ([]CountryCaseCounts, error) {
+	if from == "" && to == "" && country == "" {
+		log.Println("GetCountryCaseCounts query for all data with per day information")
+		return countryCaseCountsCache, nil
+	}
+	log.Printf("GetCountryCaseCountsWithDayData query from: %s, to: %s, country: %s\n", from, to, country)
+	filtered, err := filterCaseCounts(from, to, country)
+	return aggregateCountryDataFromCaseCounts(filtered), err
 }
 
 // GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
@@ -120,11 +139,12 @@ func setDateBoundariesAndAllAggregatedData(headerRow []string) {
 	lastDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[len(headerRow)-1])
 	allAggregatedData, _ = aggregateDataBetweenDates("", "", "")
 	allCountriesAggregatedData = aggregateCountryDataFromStatesAggregate(allAggregatedData)
+	countryCaseCountsCache = aggregateCountryDataFromCaseCounts(caseCountsCache)
 }
 
 func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string) {
 	numRows := len(confirmedData)
-	ch := make(chan caseCounts, numRows-1)
+	ch := make(chan CaseCounts, numRows-1)
 	wg := sync.WaitGroup{}
 	for rowIndex := 1; rowIndex < numRows; rowIndex++ {
 		wg.Add(1)
@@ -169,7 +189,7 @@ func getCaseCountsArrayForState(headerRow []string, confirmedRow []string, death
 	return counts
 }
 
-func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deathsRow []string, ch chan caseCounts, wg *sync.WaitGroup) {
+func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deathsRow []string, ch chan CaseCounts, wg *sync.WaitGroup) {
 	counts := getCaseCountsArrayForState(headerRow, confirmedRow, deathsRow)
 	lat, latError := strconv.ParseFloat(confirmedRow[2], 32)
 	if latError != nil {
@@ -179,19 +199,19 @@ func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deaths
 	if longError != nil {
 		log.Fatal(longError.Error())
 	}
-	ch <- caseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
+	ch <- CaseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
 	wg.Done()
 }
 
-func filterCaseCounts(from string, to string, country string) ([]caseCounts, error) {
+func filterCaseCounts(from string, to string, country string) ([]CaseCounts, error) {
 	fromIndex, toIndex := getFromAndToIndices(from, to)
-	var filteredCaseCounts []caseCounts
+	var filteredCaseCounts []CaseCounts
 	if fromIndex > toIndex {
 		return filteredCaseCounts, fmt.Errorf("From date %s cannot be after to date %s", from, to)
 	}
 	for _, caseCountsItem := range caseCountsCache {
 		if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
-			newCaseCountsItem := caseCounts{caseCountsItem.stateInformation, caseCountsItem.Counts[fromIndex : toIndex+1]}
+			newCaseCountsItem := CaseCounts{caseCountsItem.stateInformation, caseCountsItem.Counts[fromIndex : toIndex+1]}
 			filteredCaseCounts = append(filteredCaseCounts, newCaseCountsItem)
 		}
 	}
@@ -202,7 +222,7 @@ func filterCaseCounts(from string, to string, country string) ([]caseCounts, err
 	return filteredCaseCounts, err
 }
 
-func convertToAggregatedElement(caseCountsItem caseCounts, from int, to int, country string, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
+func convertToAggregatedElement(caseCountsItem CaseCounts, from int, to int, country string, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
 	if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
 		confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts, from, to)
 		ch <- CaseCountsAggregated{stateInformation{caseCountsItem.State, caseCountsItem.Country, caseCountsItem.Lat, caseCountsItem.Long}, statistics{confirmedSum, deathsSum}}
@@ -252,6 +272,36 @@ func aggregateCountryDataFromStatesAggregate(aggregateDataWithStates []CaseCount
 	for country, information := range countryInformationMap {
 		countF := float32(information.Count)
 		countryCaseCountAgg := CountryCaseCountsAggregated{countryInformation{country, information.LatSum / countF, information.LongSum / countF}, statistics{information.ConfirmedSum, information.DeathsSum}}
+		aggregatedData = append(aggregatedData, countryCaseCountAgg)
+	}
+	return aggregatedData
+}
+
+func aggregateCountryDataFromCaseCounts(caseCounts []CaseCounts) []CountryCaseCounts {
+	type CountryAggregationInformation struct {
+		LatSum, LongSum float32
+		Counts          []caseCount
+		Count           int
+	}
+	var countryInformationMap map[string]CountryAggregationInformation
+	countryInformationMap = make(map[string]CountryAggregationInformation)
+	for _, caseCountsAgg := range caseCounts {
+		if val, ok := countryInformationMap[caseCountsAgg.Country]; ok {
+			var counts = make([]caseCount, len(val.Counts))
+			copy(counts, val.Counts)
+			for index := range counts {
+				counts[index].Confirmed += caseCountsAgg.Counts[index].Confirmed
+				counts[index].Deaths += caseCountsAgg.Counts[index].Deaths
+			}
+			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, counts, val.Count + 1}
+		} else {
+			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Counts, 1}
+		}
+	}
+	var aggregatedData []CountryCaseCounts
+	for country, information := range countryInformationMap {
+		countF := float32(information.Count)
+		countryCaseCountAgg := CountryCaseCounts{countryInformation{country, information.LatSum / countF, information.LongSum / countF}, information.Counts}
 		aggregatedData = append(aggregatedData, countryCaseCountAgg)
 	}
 	return aggregatedData

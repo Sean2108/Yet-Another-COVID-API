@@ -56,17 +56,22 @@ func parseURLQuery(URL *url.URL, key string) string {
 
 func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error) {
 	if perDay {
-		caseCounts, caseCountsErr := casecount.GetCaseCountsWithDayData(from, to, country)
-		response, err := json.Marshal(caseCounts)
+		if aggregateCountries {
+			CaseCounts, caseCountsErr := casecount.GetCountryCaseCountsWithDayData(from, to, country)
+			response, err := json.Marshal(CaseCounts)
+			return response, err, caseCountsErr
+		}
+		CaseCounts, caseCountsErr := casecount.GetCaseCountsWithDayData(from, to, country)
+		response, err := json.Marshal(CaseCounts)
 		return response, err, caseCountsErr
 	}
 	if aggregateCountries {
-		caseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
-		response, err := json.Marshal(caseCounts)
+		CaseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
+		response, err := json.Marshal(CaseCounts)
 		return response, err, caseCountsErr
 	}
-	caseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
-	response, err := json.Marshal(caseCounts)
+	CaseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
+	response, err := json.Marshal(CaseCounts)
 	return response, err, caseCountsErr
 }
 

@@ -21,29 +21,29 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 	}, nil
 }
 
-func getTestCacheData() []caseCounts {
-	data1 := caseCounts{stateInformation{"", "Afghanistan", 33.0, 65.1},
+func getTestCacheData() []CaseCounts {
+	data1 := CaseCounts{stateInformation{"", "Afghanistan", 33.0, 65.1},
 		[]caseCount{
 			caseCount{"1/22/20", statistics{2, 2}},
 			caseCount{"1/23/20", statistics{3, 3}},
 			caseCount{"1/24/20", statistics{4, 4}},
 		},
 	}
-	data2 := caseCounts{stateInformation{"", "Albania", 41.1533, 20.1683},
+	data2 := CaseCounts{stateInformation{"", "Albania", 41.1533, 20.1683},
 		[]caseCount{
 			caseCount{"1/22/20", statistics{4, 4}},
 			caseCount{"1/23/20", statistics{5, 5}},
 			caseCount{"1/24/20", statistics{6, 6}},
 		},
 	}
-	data3 := caseCounts{stateInformation{"", "Algeria", 28.0339, 1.6596},
+	data3 := CaseCounts{stateInformation{"", "Algeria", 28.0339, 1.6596},
 		[]caseCount{
 			caseCount{"1/22/20", statistics{7, 7}},
 			caseCount{"1/23/20", statistics{8, 8}},
 			caseCount{"1/24/20", statistics{9, 9}},
 		},
 	}
-	return []caseCounts{data1, data2, data3}
+	return []CaseCounts{data1, data2, data3}
 }
 
 func TestUpdateCaseCounts(t *testing.T) {

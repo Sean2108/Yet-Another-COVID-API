@@ -5,10 +5,19 @@ import (
 	"testing"
 )
 
-func verifyResultsCaseCountsArr(result []caseCounts, expectedData []caseCounts, t *testing.T) {
+func verifyResultsCaseCountsArr(result []CaseCounts, expectedData []CaseCounts, t *testing.T) {
 	sort.Sort(ByCountryAndStateForCaseCounts(result))
 	for i, item := range result {
-		if !item.Equals(expectedData[i]) {
+		if !item.equals(expectedData[i]) {
+			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
+		}
+	}
+}
+
+func verifyResultsCountryCaseCountsArr(result []CountryCaseCounts, expectedData []CountryCaseCounts, t *testing.T) {
+	sort.Sort(ByCountryForCaseCounts(result))
+	for i, item := range result {
+		if !item.equals(expectedData[i]) {
 			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
 		}
 	}
