@@ -84,6 +84,16 @@ func UpdateCaseCounts() {
 	setDateBoundariesAndAllAggregatedData(headerRow)
 }
 
+// GetCaseCountsWithDayData : get case counts for all states and all countries but without aggregating the counts, so a list of days with number of confirmed cases and deaths on each day is returned
+func GetCaseCountsWithDayData(from string, to string, country string) ([]caseCounts, error) {
+	if from == "" && to == "" && country == "" {
+		log.Println("GetCaseCounts query for all data with per day information")
+		return caseCountsCache, nil
+	}
+	log.Printf("GetCaseCountsWithDayData query from: %s, to: %s, country: %s\n", from, to, country)
+	return filterCaseCounts(from, to, country)
+}
+
 // GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
 func GetCaseCounts(from string, to string, country string) ([]CaseCountsAggregated, error) {
 	if from == "" && to == "" && country == "" {
@@ -173,6 +183,25 @@ func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deaths
 	wg.Done()
 }
 
+func filterCaseCounts(from string, to string, country string) ([]caseCounts, error) {
+	fromIndex, toIndex := getFromAndToIndices(from, to)
+	var filteredCaseCounts []caseCounts
+	if fromIndex > toIndex {
+		return filteredCaseCounts, fmt.Errorf("From date %s cannot be after to date %s", from, to)
+	}
+	for _, caseCountsItem := range caseCountsCache {
+		if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
+			newCaseCountsItem := caseCounts{caseCountsItem.stateInformation, caseCountsItem.Counts[fromIndex : toIndex+1]}
+			filteredCaseCounts = append(filteredCaseCounts, newCaseCountsItem)
+		}
+	}
+	var err error
+	if country != "" && len(filteredCaseCounts) == 0 {
+		err = fmt.Errorf("Country %s not found, did you mean: %s?", country, findClosestMatchToCountryName(country))
+	}
+	return filteredCaseCounts, err
+}
+
 func convertToAggregatedElement(caseCountsItem caseCounts, from int, to int, country string, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
 	if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
 		confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts, from, to)
@@ -183,6 +212,10 @@ func convertToAggregatedElement(caseCountsItem caseCounts, from int, to int, cou
 
 func aggregateDataBetweenDates(from string, to string, country string) ([]CaseCountsAggregated, error) {
 	fromIndex, toIndex := getFromAndToIndices(from, to)
+	var aggregatedData []CaseCountsAggregated
+	if fromIndex > toIndex {
+		return aggregatedData, fmt.Errorf("From date %s cannot be after to date %s", from, to)
+	}
 	ch := make(chan CaseCountsAggregated, len(caseCountsCache))
 	wg := sync.WaitGroup{}
 	for _, caseCountsItem := range caseCountsCache {
@@ -191,7 +224,6 @@ func aggregateDataBetweenDates(from string, to string, country string) ([]CaseCo
 	}
 	wg.Wait()
 	close(ch)
-	var aggregatedData []CaseCountsAggregated
 	for caseCountsAgg := range ch {
 		aggregatedData = append(aggregatedData, caseCountsAgg)
 	}

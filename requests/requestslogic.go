@@ -16,18 +16,18 @@ type writer interface {
 	WriteHeader(statusCode int)
 }
 
-func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool) {
+func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool, bool) {
 	from := parseURLQuery(URL, "from")
 	to := parseURLQuery(URL, "to")
 	country := parseURLQuery(URL, "country")
 
 	from, ok := dateformat.FormatDate(dateFormat, from)
 	if !ok {
-		return "", "", "", false, false
+		return "", "", "", false, false, false
 	}
 	to, ok = dateformat.FormatDate(dateFormat, to)
 	if !ok {
-		return "", "", "", false, false
+		return "", "", "", false, false, false
 	}
 
 	var countryLookupFuncToCall func(string) (string, bool)
@@ -40,8 +40,9 @@ func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, st
 		country = countryFromAbbr
 	}
 	aggregateCountries := parseURLQuery(URL, "aggregateCountries") == "true"
+	perDay := parseURLQuery(URL, "perDay") == "true"
 
-	return from, to, country, aggregateCountries, true
+	return from, to, country, aggregateCountries, perDay, true
 }
 
 func parseURLQuery(URL *url.URL, key string) string {
@@ -53,37 +54,36 @@ func parseURLQuery(URL *url.URL, key string) string {
 	return result
 }
 
-func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool) ([]byte, error, error) {
+func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error) {
+	if perDay {
+		caseCounts, caseCountsErr := casecount.GetCaseCountsWithDayData(from, to, country)
+		response, err := json.Marshal(caseCounts)
+		return response, err, caseCountsErr
+	}
 	if aggregateCountries {
 		caseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
-		if caseCountsErr != nil {
-			return nil, nil, caseCountsErr
-		}
 		response, err := json.Marshal(caseCounts)
-		return response, err, nil
+		return response, err, caseCountsErr
 	}
 	caseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
-	if caseCountsErr != nil {
-		return nil, nil, caseCountsErr
-	}
 	response, err := json.Marshal(caseCounts)
-	return response, err, nil
+	return response, err, caseCountsErr
 }
 
-func getNewsForCountryResponse(from string, to string, country string, _ bool) ([]byte, error, error) {
+func getNewsForCountryResponse(from string, to string, country string, _ bool, _ bool) ([]byte, error, error) {
 	articles, newsErr := news.GetNews(from, to, country)
 	response, err := json.Marshal(articles)
 	return response, err, newsErr
 }
 
-func getResponse(getDataFn func(from string, to string, country string, aggregateCountries bool) ([]byte, error, error), w writer, URL *url.URL) {
+func getResponse(getDataFn func(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error), w writer, URL *url.URL) {
 	log.Println(URL.String())
-	from, to, country, aggregateCountries, ok := parseURL(URL, false, dateformat.CasesDateFormat)
+	from, to, country, aggregateCountries, perDay, ok := parseURL(URL, false, dateformat.CasesDateFormat)
 	if !ok {
 		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
 		return
 	}
-	response, jsonErr, internalErr := getDataFn(from, to, country, aggregateCountries)
+	response, jsonErr, internalErr := getDataFn(from, to, country, aggregateCountries, perDay)
 	if internalErr != nil {
 		http.Error(w, internalErr.Error(), http.StatusBadRequest)
 		return
