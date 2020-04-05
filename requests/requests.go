@@ -13,8 +13,3 @@ func GetCaseCounts(w http.ResponseWriter, r *http.Request) {
 func GetNewsForCountry(w http.ResponseWriter, r *http.Request) {
 	getResponse(getNewsForCountryResponse, w, r.URL)
 }
-
-// GetLandingPage : returns html code of the landing page that provides some information about the API. TODO: Improve the landing page
-func GetLandingPage(w http.ResponseWriter, r *http.Request) {
-	writeLandingPageHTML(w)
-}
