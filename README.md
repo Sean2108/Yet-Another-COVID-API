@@ -19,12 +19,13 @@ Deployed at https://yet-another-covid-api.herokuapp.com.
 - Get news for country in the field to extract the latest coronavirus news for that country. Will use the News API (https://newsapi.org/) for obtaining this information. For example, https://yet-another-covid-api.herokuapp.com/news?country=Singapore
 - Call the endpoint with attributes 'from' and/or 'to' to get the news between the from date and to date. For example https://yet-another-covid-api.herokuapp.com/news?from=3/2/20&to=3/10/20&country=us.
 
-Allowed date formats:
+### Allowed date formats:
 - MM/DD/YY
 - MM/DD/YYYY
 - YYYY/MM/DD
 - YY/MM/DD
+
 You can use either / or - as the date delimiters.
 
-Allowed country formats:
+### Allowed country formats:
 You can use the full name or the short 2 letter ISO 3166 Alpha-2 code to identify countries. For example, SG and Singapore are equivalent. This is case insensitive.
