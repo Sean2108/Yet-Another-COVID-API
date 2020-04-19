@@ -21,29 +21,40 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 	}, nil
 }
 
-func getTestCacheData() []CaseCounts {
-	data1 := CaseCounts{stateInformation{"", "Afghanistan", 33.0, 65.1},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{2, 2}},
-			CaseCount{"1/23/20", statistics{3, 3}},
-			CaseCount{"1/24/20", statistics{4, 4}},
+func getTestCacheData() map[string]map[string]CaseCounts {
+	result := map[string]map[string]CaseCounts{
+		"Afghanistan": map[string]CaseCounts{
+			"": CaseCounts{
+				Location{33.0, 65.1},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{2, 2}},
+					CaseCount{"1/23/20", statistics{3, 3}},
+					CaseCount{"1/24/20", statistics{4, 4}},
+				},
+			},
+		},
+		"Albania": map[string]CaseCounts{
+			"": CaseCounts{
+				Location{41.1533, 20.1683},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{4, 4}},
+					CaseCount{"1/23/20", statistics{5, 5}},
+					CaseCount{"1/24/20", statistics{6, 6}},
+				},
+			},
+		},
+		"Algeria": map[string]CaseCounts{
+			"": CaseCounts{
+				Location{28.0339, 1.6596},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{7, 7}},
+					CaseCount{"1/23/20", statistics{8, 8}},
+					CaseCount{"1/24/20", statistics{9, 9}},
+				},
+			},
 		},
 	}
-	data2 := CaseCounts{stateInformation{"", "Albania", 41.1533, 20.1683},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{4, 4}},
-			CaseCount{"1/23/20", statistics{5, 5}},
-			CaseCount{"1/24/20", statistics{6, 6}},
-		},
-	}
-	data3 := CaseCounts{stateInformation{"", "Algeria", 28.0339, 1.6596},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{7, 7}},
-			CaseCount{"1/23/20", statistics{8, 8}},
-			CaseCount{"1/24/20", statistics{9, 9}},
-		},
-	}
-	return []CaseCounts{data1, data2, data3}
+	return result
 }
 
 func TestUpdateCaseCounts(t *testing.T) {
@@ -57,54 +68,102 @@ func TestUpdateCaseCounts(t *testing.T) {
 	}
 	expectedCaseCounts := getTestCacheData()
 
-	if len(caseCountsCache) != 3 {
-		t.Errorf("Length of confirmedData is incorrect, got: %d, want %d.", len(caseCountsCache), 3)
+	if len(caseCountsMap) != 3 {
+		t.Errorf("Length of confirmedData is incorrect, got: %d, want %d.", len(caseCountsMap), 3)
 	}
-	verifyResultsCaseCountsArr(caseCountsCache, expectedCaseCounts, t)
+	verifyResultsCaseCountsMap(caseCountsMap, expectedCaseCounts, t)
 
-	expectedAllAgg := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"", "Afghanistan", 33.0, 65.1}, statistics{4, 4}},
-		CaseCountsAggregated{stateInformation{"", "Albania", 41.1533, 20.1683}, statistics{6, 6}},
-		CaseCountsAggregated{stateInformation{"", "Algeria", 28.0339, 1.6596}, statistics{9, 9}},
+	expectedAllAgg := map[string]map[string]CaseCountsAggregated{
+		"Afghanistan": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{33.0, 65.1},
+				statistics{4, 4},
+			},
+		},
+		"Albania": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{41.1533, 20.1683},
+				statistics{6, 6},
+			},
+		},
+		"Algeria": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{28.0339, 1.6596},
+				statistics{9, 9},
+			},
+		},
 	}
 	caseCountsAgg, _ := GetCaseCounts("", "", "")
 	verifyResultsCaseCountsAgg(caseCountsAgg, expectedAllAgg, t)
 
-	expectedAllCountryAgg := []CountryCaseCountsAggregated{
-		CountryCaseCountsAggregated{countryInformation{"Afghanistan", 33.0, 65.1}, statistics{4, 4}},
-		CountryCaseCountsAggregated{countryInformation{"Albania", 41.1533, 20.1683}, statistics{6, 6}},
-		CountryCaseCountsAggregated{countryInformation{"Algeria", 28.0339, 1.6596}, statistics{9, 9}},
+	expectedAllCountryAgg := map[string]CaseCountsAggregated{
+		"Afghanistan": CaseCountsAggregated{
+			Location{33.0, 65.1},
+			statistics{4, 4},
+		},
+		"Albania": CaseCountsAggregated{
+			Location{41.1533, 20.1683},
+			statistics{6, 6},
+		},
+		"Algeria": CaseCountsAggregated{
+			Location{28.0339, 1.6596},
+			statistics{9, 9},
+		},
 	}
 	countryCaseCountsAgg, _ := GetCountryCaseCounts("", "", "")
 	verifyResultsCountryCaseCountsAgg(countryCaseCountsAgg, expectedAllCountryAgg, t)
 
-	caseCountsCache = nil
-	allAggregatedData = nil
-	allCountriesAggregatedData = nil
+	caseCountsMap = nil
+	stateAggregatedMap = nil
+	countryAggregatedMap = nil
 }
 
 func TestGetCounts(t *testing.T) {
 	client = &mockClient{}
 	UpdateCaseCounts()
-	expectedAllAgg := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"", "Afghanistan", 33.0, 65.1}, statistics{2, 2}},
-		CaseCountsAggregated{stateInformation{"", "Albania", 41.1533, 20.1683}, statistics{2, 2}},
-		CaseCountsAggregated{stateInformation{"", "Algeria", 28.0339, 1.6596}, statistics{2, 2}},
+	expectedAllAgg := map[string]map[string]CaseCountsAggregated{
+		"Afghanistan": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{33.0, 65.1},
+				statistics{2, 2},
+			},
+		},
+		"Albania": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{41.1533, 20.1683},
+				statistics{2, 2},
+			},
+		},
+		"Algeria": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{28.0339, 1.6596},
+				statistics{2, 2},
+			},
+		},
 	}
 	caseCountsAgg, _ := GetCaseCounts("1/23/20", "1/24/20", "")
 	verifyResultsCaseCountsAgg(caseCountsAgg, expectedAllAgg, t)
 
-	expectedAllCountryAgg := []CountryCaseCountsAggregated{
-		CountryCaseCountsAggregated{countryInformation{"Afghanistan", 33.0, 65.1}, statistics{3, 3}},
-		CountryCaseCountsAggregated{countryInformation{"Albania", 41.1533, 20.1683}, statistics{5, 5}},
-		CountryCaseCountsAggregated{countryInformation{"Algeria", 28.0339, 1.6596}, statistics{8, 8}},
+	expectedAllCountryAgg := map[string]CaseCountsAggregated{
+		"Afghanistan": CaseCountsAggregated{
+			Location{33.0, 65.1},
+			statistics{3, 3},
+		},
+		"Albania": CaseCountsAggregated{
+			Location{41.1533, 20.1683},
+			statistics{5, 5},
+		},
+		"Algeria": CaseCountsAggregated{
+			Location{28.0339, 1.6596},
+			statistics{8, 8},
+		},
 	}
 	countryCaseCountsAgg, _ := GetCountryCaseCounts("1/22/20", "1/23/20", "")
 	verifyResultsCountryCaseCountsAgg(countryCaseCountsAgg, expectedAllCountryAgg, t)
 
-	caseCountsCache = nil
-	allAggregatedData = nil
-	allCountriesAggregatedData = nil
+	caseCountsMap = nil
+	stateAggregatedMap = nil
+	countryAggregatedMap = nil
 }
 
 func TestGetDaysBetweenDates(t *testing.T) {

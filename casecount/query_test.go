@@ -5,102 +5,128 @@ import (
 	"testing"
 )
 
-func getTestCaseCounts() []CaseCounts {
-	expectedBeijingData := CaseCounts{stateInformation{"Beijing", "China", 40.1824, 116.4142},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{50, 10}},
-			CaseCount{"1/23/20", statistics{200, 87}},
-			CaseCount{"1/24/20", statistics{800, 125}},
-			CaseCount{"1/25/20", statistics{1020, 142}},
-			CaseCount{"1/26/20", statistics{1110, 145}},
-			CaseCount{"1/27/20", statistics{1235, 152}},
+func getTestCaseCounts() map[string]map[string]CaseCounts {
+	result := map[string]map[string]CaseCounts{
+		"China": map[string]CaseCounts{
+			"Beijing": CaseCounts{
+				Location{40.1824, 116.4142},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{50, 10}},
+					CaseCount{"1/23/20", statistics{200, 87}},
+					CaseCount{"1/24/20", statistics{800, 125}},
+					CaseCount{"1/25/20", statistics{1020, 142}},
+					CaseCount{"1/26/20", statistics{1110, 145}},
+					CaseCount{"1/27/20", statistics{1235, 152}},
+				},
+			},
+			"Hubei": CaseCounts{
+				Location{30.9756, 112.2707},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{100, 20}},
+					CaseCount{"1/23/20", statistics{1000, 100}},
+					CaseCount{"1/24/20", statistics{1800, 105}},
+					CaseCount{"1/25/20", statistics{2020, 150}},
+					CaseCount{"1/26/20", statistics{2110, 175}},
+					CaseCount{"1/27/20", statistics{2111, 230}},
+				},
+			},
+			"Shanghai": CaseCounts{
+				Location{31.202, 121.4491},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{10, 5}},
+					CaseCount{"1/23/20", statistics{45, 8}},
+					CaseCount{"1/24/20", statistics{89, 20}},
+					CaseCount{"1/25/20", statistics{126, 25}},
+					CaseCount{"1/26/20", statistics{400, 42}},
+					CaseCount{"1/27/20", statistics{532, 55}},
+				},
+			},
+		},
+		"Singapore": map[string]CaseCounts{
+			"": CaseCounts{
+				Location{1.2833, 103.8333},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{1, 0}},
+					CaseCount{"1/23/20", statistics{3, 2}},
+					CaseCount{"1/24/20", statistics{6, 4}},
+					CaseCount{"1/25/20", statistics{10, 5}},
+					CaseCount{"1/26/20", statistics{15, 8}},
+					CaseCount{"1/27/20", statistics{23, 10}},
+				},
+			},
+		},
+		"United Kingdom": map[string]CaseCounts{
+			"London": CaseCounts{
+				Location{55.3781, -3.4360000000000004},
+				[]CaseCount{
+					CaseCount{"1/22/20", statistics{1, 0}},
+					CaseCount{"1/23/20", statistics{6, 1}},
+					CaseCount{"1/24/20", statistics{8, 3}},
+					CaseCount{"1/25/20", statistics{9, 6}},
+					CaseCount{"1/26/20", statistics{20, 6}},
+					CaseCount{"1/27/20", statistics{28, 9}},
+				},
+			},
 		},
 	}
-	expectedHubeiData := CaseCounts{stateInformation{"Hubei", "China", 30.9756, 112.2707},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{100, 20}},
-			CaseCount{"1/23/20", statistics{1000, 100}},
-			CaseCount{"1/24/20", statistics{1800, 105}},
-			CaseCount{"1/25/20", statistics{2020, 150}},
-			CaseCount{"1/26/20", statistics{2110, 175}},
-			CaseCount{"1/27/20", statistics{2111, 230}},
-		},
-	}
-	expectedShanghaiData := CaseCounts{stateInformation{"Shanghai", "China", 31.202, 121.4491},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{10, 5}},
-			CaseCount{"1/23/20", statistics{45, 8}},
-			CaseCount{"1/24/20", statistics{89, 20}},
-			CaseCount{"1/25/20", statistics{126, 25}},
-			CaseCount{"1/26/20", statistics{400, 42}},
-			CaseCount{"1/27/20", statistics{532, 55}},
-		},
-	}
-	expectedSingaporeData := CaseCounts{stateInformation{"", "Singapore", 1.2833, 103.8333},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{1, 0}},
-			CaseCount{"1/23/20", statistics{3, 2}},
-			CaseCount{"1/24/20", statistics{6, 4}},
-			CaseCount{"1/25/20", statistics{10, 5}},
-			CaseCount{"1/26/20", statistics{15, 8}},
-			CaseCount{"1/27/20", statistics{23, 10}},
-		},
-	}
-	expectedLondonData := CaseCounts{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004},
-		[]CaseCount{
-			CaseCount{"1/22/20", statistics{1, 0}},
-			CaseCount{"1/23/20", statistics{6, 1}},
-			CaseCount{"1/24/20", statistics{8, 3}},
-			CaseCount{"1/25/20", statistics{9, 6}},
-			CaseCount{"1/26/20", statistics{20, 6}},
-			CaseCount{"1/27/20", statistics{28, 9}},
-		},
-	}
-	return []CaseCounts{expectedBeijingData, expectedHubeiData, expectedShanghaiData, expectedSingaporeData, expectedLondonData}
+	return result
 }
 
-func getTestCaseCountsWithoutFirstAndLastDay() []CaseCounts {
-	expectedBeijingData := CaseCounts{stateInformation{"Beijing", "China", 40.1824, 116.4142},
-		[]CaseCount{
-			CaseCount{"1/23/20", statistics{200, 87}},
-			CaseCount{"1/24/20", statistics{800, 125}},
-			CaseCount{"1/25/20", statistics{1020, 142}},
-			CaseCount{"1/26/20", statistics{1110, 145}},
+func getTestCaseCountsWithoutFirstAndLastDay() map[string]map[string]CaseCounts {
+	result := map[string]map[string]CaseCounts{
+		"China": map[string]CaseCounts{
+			"Beijing": CaseCounts{
+				Location{40.1824, 116.4142},
+				[]CaseCount{
+					CaseCount{"1/23/20", statistics{200, 87}},
+					CaseCount{"1/24/20", statistics{800, 125}},
+					CaseCount{"1/25/20", statistics{1020, 142}},
+					CaseCount{"1/26/20", statistics{1110, 145}},
+				},
+			},
+			"Hubei": CaseCounts{
+				Location{30.9756, 112.2707},
+				[]CaseCount{
+					CaseCount{"1/23/20", statistics{1000, 100}},
+					CaseCount{"1/24/20", statistics{1800, 105}},
+					CaseCount{"1/25/20", statistics{2020, 150}},
+					CaseCount{"1/26/20", statistics{2110, 175}},
+				},
+			},
+			"Shanghai": CaseCounts{
+				Location{31.202, 121.4491},
+				[]CaseCount{
+					CaseCount{"1/23/20", statistics{45, 8}},
+					CaseCount{"1/24/20", statistics{89, 20}},
+					CaseCount{"1/25/20", statistics{126, 25}},
+					CaseCount{"1/26/20", statistics{400, 42}},
+				},
+			},
+		},
+		"Singapore": map[string]CaseCounts{
+			"": CaseCounts{
+				Location{1.2833, 103.8333},
+				[]CaseCount{
+					CaseCount{"1/23/20", statistics{3, 2}},
+					CaseCount{"1/24/20", statistics{6, 4}},
+					CaseCount{"1/25/20", statistics{10, 5}},
+					CaseCount{"1/26/20", statistics{15, 8}},
+				},
+			},
+		},
+		"United Kingdom": map[string]CaseCounts{
+			"London": CaseCounts{
+				Location{55.3781, -3.4360000000000004},
+				[]CaseCount{
+					CaseCount{"1/23/20", statistics{6, 1}},
+					CaseCount{"1/24/20", statistics{8, 3}},
+					CaseCount{"1/25/20", statistics{9, 6}},
+					CaseCount{"1/26/20", statistics{20, 6}},
+				},
+			},
 		},
 	}
-	expectedHubeiData := CaseCounts{stateInformation{"Hubei", "China", 30.9756, 112.2707},
-		[]CaseCount{
-			CaseCount{"1/23/20", statistics{1000, 100}},
-			CaseCount{"1/24/20", statistics{1800, 105}},
-			CaseCount{"1/25/20", statistics{2020, 150}},
-			CaseCount{"1/26/20", statistics{2110, 175}},
-		},
-	}
-	expectedShanghaiData := CaseCounts{stateInformation{"Shanghai", "China", 31.202, 121.4491},
-		[]CaseCount{
-			CaseCount{"1/23/20", statistics{45, 8}},
-			CaseCount{"1/24/20", statistics{89, 20}},
-			CaseCount{"1/25/20", statistics{126, 25}},
-			CaseCount{"1/26/20", statistics{400, 42}},
-		},
-	}
-	expectedSingaporeData := CaseCounts{stateInformation{"", "Singapore", 1.2833, 103.8333},
-		[]CaseCount{
-			CaseCount{"1/23/20", statistics{3, 2}},
-			CaseCount{"1/24/20", statistics{6, 4}},
-			CaseCount{"1/25/20", statistics{10, 5}},
-			CaseCount{"1/26/20", statistics{15, 8}},
-		},
-	}
-	expectedLondonData := CaseCounts{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004},
-		[]CaseCount{
-			CaseCount{"1/23/20", statistics{6, 1}},
-			CaseCount{"1/24/20", statistics{8, 3}},
-			CaseCount{"1/25/20", statistics{9, 6}},
-			CaseCount{"1/26/20", statistics{20, 6}},
-		},
-	}
-	return []CaseCounts{expectedBeijingData, expectedHubeiData, expectedShanghaiData, expectedSingaporeData, expectedLondonData}
+	return result
 }
 
 func TestExtractCaseCounts(t *testing.T) {
@@ -121,51 +147,83 @@ func TestExtractCaseCounts(t *testing.T) {
 		{"London", "United Kingdom", "55.3781", "-3.4360000000000004", "0", "1", "3", "6", "6", "9"},
 	}
 	headerRow := confirmedData[0]
-	extractCaseCounts(headerRow, confirmedData, deathsData)
-	result := caseCountsCache
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
+	result := extractCaseCounts(headerRow, confirmedData, deathsData)
 	expectedData := getTestCaseCounts()
-	verifyResultsCaseCountsArr(result, expectedData, t)
+	verifyResultsCaseCountsMap(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_AllDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
-	result := allAggregatedData
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{1235, 152}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{2111, 230}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{532, 55}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{28, 9}},
+	result := stateAggregatedMap
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{1235, 152},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{2111, 230},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{532, 55},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{23, 10},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{28, 9},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/24/20", "1/26/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{910, 58}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{1110, 75}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{355, 34}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{12, 6}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{14, 5}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{910, 58},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{1110, 75},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{355, 34},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{12, 6},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{14, 5},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryDatesBeforeValidRange(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/20/20", "1/21/20", "")
 	if len(result) != 0 {
@@ -174,7 +232,7 @@ func TestAggregateDataBetweenDates_QueryDatesBeforeValidRange(t *testing.T) {
 }
 
 func TestAggregateDataBetweenDates_QueryDatesAfterValidRange(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/28/20", "1/29/20", "")
 	if len(result) != 0 {
@@ -183,24 +241,42 @@ func TestAggregateDataBetweenDates_QueryDatesAfterValidRange(t *testing.T) {
 }
 
 func TestAggregateDataBetweenDates_QueryDatesBeforeAndAfter_ShouldReturnAll(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/21/20", "1/28/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{1235, 152}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{2111, 230}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{532, 55}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{28, 9}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{1235, 152},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{2111, 230},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{532, 55},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{23, 10},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{28, 9},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryFromDateAfterToDate(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	_, err := aggregateDataBetweenDates("1/24/20", "1/23/20", "China")
 	if err == nil {
@@ -209,33 +285,37 @@ func TestAggregateDataBetweenDates_QueryFromDateAfterToDate(t *testing.T) {
 }
 
 func TestAggregateDataBetweenDates_QueryCountry(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("", "", "Singapore")
-	if len(result) != 1 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 1)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{23, 10},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryCountry_wEiRdCaSiNg(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("", "", "sInGaPoRe")
-	if len(result) != 1 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 1)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{23, 10},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryCountry_SpellingMistakeInCountryName(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, err := aggregateDataBetweenDates("", "", "Siingapore")
 	if len(result) != 0 {
@@ -261,137 +341,212 @@ func TestAggregateDataBetweenDates_QueryCountry_SpellingMistakeInCountryName(t *
 }
 
 func TestAggregateDataBetweenDates_QueryDates_FromIsOutOfRange(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/21/20", "1/26/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{1110, 145}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{2110, 175}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{400, 42}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{15, 8}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{20, 6}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{1110, 145},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{2110, 175},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{400, 42},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{15, 8},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{20, 6},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryDates_ToIsOutOfRange(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/24/20", "1/28/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{1035, 65}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{1111, 130}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{487, 47}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{20, 8}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{22, 8}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{1035, 65},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{1111, 130},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{487, 47},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{20, 8},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{22, 8},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataBetweenDates_QueryDates_FromAndToBothOutOfRange(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := aggregateDataBetweenDates("1/21/20", "1/28/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{1235, 152}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{2111, 230}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{532, 55}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{23, 10}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{28, 9}},
+	expectedData := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{1235, 152},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{2111, 230},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{532, 55},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{23, 10},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{28, 9},
+			},
+		},
 	}
 	verifyResultsCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateCountryDataFromStatesAggregate_AllDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
-	result := allCountriesAggregatedData
-	if len(result) != 3 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
-	}
-	expectedData := []CountryCaseCountsAggregated{
-		CountryCaseCountsAggregated{countryInformation{"China", (40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0}, statistics{3878, 437}},
-		CountryCaseCountsAggregated{countryInformation{"Singapore", 1.2833, 103.8333}, statistics{23, 10}},
-		CountryCaseCountsAggregated{countryInformation{"United Kingdom", 55.3781, -3.4360000000000004}, statistics{28, 9}},
+	result := countryAggregatedMap
+	expectedData := map[string]CaseCountsAggregated{
+		"China": CaseCountsAggregated{
+			Location{(40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0},
+			statistics{3878, 437},
+		},
+		"Singapore": CaseCountsAggregated{
+			Location{1.2833, 103.8333},
+			statistics{23, 10},
+		},
+		"United Kingdom": CaseCountsAggregated{
+			Location{55.3781, -3.4360000000000004},
+			statistics{28, 9},
+		},
 	}
 	verifyResultsCountryCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateCountryDataFromStatesAggregate_QueryDates(t *testing.T) {
-	input := []CaseCountsAggregated{
-		CaseCountsAggregated{stateInformation{"Beijing", "China", 40.1824, 116.4142}, statistics{910, 58}},
-		CaseCountsAggregated{stateInformation{"Hubei", "China", 30.9756, 112.2707}, statistics{1110, 75}},
-		CaseCountsAggregated{stateInformation{"Shanghai", "China", 31.202, 121.4491}, statistics{355, 34}},
-		CaseCountsAggregated{stateInformation{"", "Singapore", 1.2833, 103.8333}, statistics{12, 6}},
-		CaseCountsAggregated{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004}, statistics{14, 5}},
+	input := map[string]map[string]CaseCountsAggregated{
+		"China": map[string]CaseCountsAggregated{
+			"Beijing": CaseCountsAggregated{
+				Location{40.1824, 116.4142},
+				statistics{910, 58},
+			},
+			"Hubei": CaseCountsAggregated{
+				Location{30.9756, 112.2707},
+				statistics{1110, 75},
+			},
+			"Shanghai": CaseCountsAggregated{
+				Location{31.202, 121.4491},
+				statistics{355, 34},
+			},
+		},
+		"Singapore": map[string]CaseCountsAggregated{
+			"": CaseCountsAggregated{
+				Location{1.2833, 103.8333},
+				statistics{12, 6},
+			},
+		},
+		"United Kingdom": map[string]CaseCountsAggregated{
+			"London": CaseCountsAggregated{
+				Location{55.3781, -3.4360000000000004},
+				statistics{14, 5},
+			},
+		},
 	}
 	result := aggregateCountryDataFromStatesAggregate(input)
-	if len(result) != 3 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
-	}
-	expectedData := []CountryCaseCountsAggregated{
-		CountryCaseCountsAggregated{countryInformation{"China", (40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0}, statistics{2375, 167}},
-		CountryCaseCountsAggregated{countryInformation{"Singapore", 1.2833, 103.8333}, statistics{12, 6}},
-		CountryCaseCountsAggregated{countryInformation{"United Kingdom", 55.3781, -3.4360000000000004}, statistics{14, 5}},
+	expectedData := map[string]CaseCountsAggregated{
+		"China": CaseCountsAggregated{
+			Location{(40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0},
+			statistics{2375, 167},
+		},
+		"Singapore": CaseCountsAggregated{
+			Location{1.2833, 103.8333},
+			statistics{12, 6},
+		},
+		"United Kingdom": CaseCountsAggregated{
+			Location{55.3781, -3.4360000000000004},
+			statistics{14, 5},
+		},
 	}
 	verifyResultsCountryCaseCountsAgg(result, expectedData, t)
 }
 
 func TestAggregateDataPerDay_AllDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetCaseCountsWithDayData("", "", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := caseCountsCache
-	verifyResultsCaseCountsArr(result, expectedData, t)
+	expectedData := caseCountsMap
+	verifyResultsCaseCountsMap(result, expectedData, t)
 }
 
 func TestAggregateDataPerDay_QueryDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetCaseCountsWithDayData("1/23/20", "1/26/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
 	expectedData := getTestCaseCountsWithoutFirstAndLastDay()
-	verifyResultsCaseCountsArr(result, expectedData, t)
+	verifyResultsCaseCountsMap(result, expectedData, t)
 }
 
 func TestAggregateDataPerDay_BeforeAndAfterShouldReturnAll(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetCaseCountsWithDayData("1/21/20", "1/28/20", "")
-	if len(result) != 5 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 5)
-	}
-	expectedData := caseCountsCache
-	verifyResultsCaseCountsArr(result, expectedData, t)
+	expectedData := caseCountsMap
+	verifyResultsCaseCountsMap(result, expectedData, t)
 }
 
 func TestAggregateDataPerDay_CountryQuery(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetCaseCountsWithDayData("", "", "China")
-	if len(result) != 3 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
-	}
-	expectedData := getTestCaseCounts()[0:3]
-	verifyResultsCaseCountsArr(result, expectedData, t)
+	expectedData := getTestCaseCounts()["China"]
+	verifyResultsCaseCountsMap(result, map[string]map[string]CaseCounts{"China": expectedData}, t)
 }
 
 func TestAggregateDataPerDay_CountryQueryWithSpellingError(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, err := GetCaseCountsWithDayData("", "", "Chiina")
 	if len(result) != 0 {
@@ -403,7 +558,7 @@ func TestAggregateDataPerDay_CountryQueryWithSpellingError(t *testing.T) {
 }
 
 func TestAggregateDataPerDay_QueryFromDateAfterToDate(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	_, err := GetCaseCountsWithDayData("1/24/20", "1/23/20", "China")
 	if err == nil {
@@ -412,49 +567,51 @@ func TestAggregateDataPerDay_QueryFromDateAfterToDate(t *testing.T) {
 }
 
 func TestCountryAggregateDataPerDay_AllDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetCountryCaseCountsWithDayData("", "", "")
-	if len(result) != 3 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
-	}
-	expectedData := countryCaseCountsCache
-	verifyResultsCountryCaseCountsArr(result, expectedData, t)
+	expectedData := countryCaseCountsMap
+	verifyResultsCountryCaseCountsMap(result, expectedData, t)
 }
 
 func TestCountryAggregateDataPerDay_QueryDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetCountryCaseCountsWithDayData("1/23/20", "1/26/20", "")
-	if len(result) != 3 {
-		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
-	}
-	expectedData := []CountryCaseCounts{
-		CountryCaseCounts{countryInformation{"China", (40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0},
+	expectedData := map[string]CaseCounts{
+		"China": CaseCounts{
+			Location{(40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0},
 			[]CaseCount{
 				CaseCount{"1/23/20", statistics{1245, 195}},
 				CaseCount{"1/24/20", statistics{2689, 250}},
 				CaseCount{"1/25/20", statistics{3166, 317}},
 				CaseCount{"1/26/20", statistics{3620, 362}},
-			}},
-		CountryCaseCounts{countryInformation{"Singapore", 1.2833, 103.8333}, []CaseCount{
-			CaseCount{"1/23/20", statistics{3, 2}},
-			CaseCount{"1/24/20", statistics{6, 4}},
-			CaseCount{"1/25/20", statistics{10, 5}},
-			CaseCount{"1/26/20", statistics{15, 8}},
-		}},
-		CountryCaseCounts{countryInformation{"United Kingdom", 55.3781, -3.4360000000000004}, []CaseCount{
-			CaseCount{"1/23/20", statistics{6, 1}},
-			CaseCount{"1/24/20", statistics{8, 3}},
-			CaseCount{"1/25/20", statistics{9, 6}},
-			CaseCount{"1/26/20", statistics{20, 6}},
-		}},
+			},
+		},
+		"Singapore": CaseCounts{
+			Location{1.2833, 103.8333},
+			[]CaseCount{
+				CaseCount{"1/23/20", statistics{3, 2}},
+				CaseCount{"1/24/20", statistics{6, 4}},
+				CaseCount{"1/25/20", statistics{10, 5}},
+				CaseCount{"1/26/20", statistics{15, 8}},
+			},
+		},
+		"United Kingdom": CaseCounts{
+			Location{55.3781, -3.4360000000000004},
+			[]CaseCount{
+				CaseCount{"1/23/20", statistics{6, 1}},
+				CaseCount{"1/24/20", statistics{8, 3}},
+				CaseCount{"1/25/20", statistics{9, 6}},
+				CaseCount{"1/26/20", statistics{20, 6}},
+			},
+		},
 	}
-	verifyResultsCountryCaseCountsArr(result, expectedData, t)
+	verifyResultsCountryCaseCountsMap(result, expectedData, t)
 }
 
 func TestWorldTotal_AllDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetWorldCaseCounts("", "")
 	if len(result) != 6 {
@@ -472,7 +629,7 @@ func TestWorldTotal_AllDates(t *testing.T) {
 }
 
 func TestWorldTotal_QueryDates(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	result, _ := GetWorldCaseCounts("1/23/20", "1/26/20")
 	if len(result) != 4 {
@@ -488,7 +645,7 @@ func TestWorldTotal_QueryDates(t *testing.T) {
 }
 
 func TestWorldTotal_QueryFromDateAfterToDate(t *testing.T) {
-	caseCountsCache = getTestCaseCounts()
+	caseCountsMap = getTestCaseCounts()
 	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
 	_, err := GetWorldCaseCounts("1/24/20", "1/23/20")
 	if err == nil {

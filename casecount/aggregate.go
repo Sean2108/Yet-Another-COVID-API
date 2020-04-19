@@ -6,16 +6,55 @@ import (
 	"sync"
 )
 
-func filterCaseCounts(from string, to string, country string) ([]CaseCounts, error) {
+type aggregatedCaseCountsMap struct {
+	country string
+	info    map[string]CaseCountsAggregated
+}
+
+type countryMap struct {
+	country string
+	info    CaseCounts
+}
+
+type countryAggMap struct {
+	country string
+	info    CaseCountsAggregated
+}
+
+func copyAndFilterCaseCountsMap(countryInfo map[string]CaseCounts, fromIndex int, toIndex int) map[string]CaseCounts {
+	newInfo := make(map[string]CaseCounts, len(countryInfo))
+	for state, stateInfo := range countryInfo {
+		newStateInfo := CaseCounts{stateInfo.Location, stateInfo.Counts[fromIndex : toIndex+1]}
+		newInfo[state] = newStateInfo
+	}
+	return newInfo
+}
+
+func aggregateCaseCountsMap(countryInfo map[string]CaseCounts, fromIndex int, toIndex int) map[string]CaseCountsAggregated {
+	newInfo := make(map[string]CaseCountsAggregated, len(countryInfo))
+	for state, stateInfo := range countryInfo {
+		confirmedSum, deathsSum := getStatisticsSum(stateInfo.Counts, fromIndex, toIndex)
+		newStateInfo := CaseCountsAggregated{stateInfo.Location, statistics{confirmedSum, deathsSum}}
+		newInfo[state] = newStateInfo
+	}
+	return newInfo
+}
+
+func filterCaseCounts(from string, to string, country string) (map[string]map[string]CaseCounts, error) {
 	fromIndex, toIndex := getFromAndToIndices(from, to)
-	var filteredCaseCounts []CaseCounts
+	filteredCaseCounts := make(map[string]map[string]CaseCounts)
 	if fromIndex > toIndex {
 		return filteredCaseCounts, fmt.Errorf("From date %s cannot be after to date %s", from, to)
 	}
-	for _, caseCountsItem := range caseCountsCache {
-		if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
-			newCaseCountsItem := CaseCounts{caseCountsItem.stateInformation, caseCountsItem.Counts[fromIndex : toIndex+1]}
-			filteredCaseCounts = append(filteredCaseCounts, newCaseCountsItem)
+	if country != "" {
+		if countryInfo, ok := caseCountsMap[country]; ok {
+			filteredCaseCounts[country] = copyAndFilterCaseCountsMap(countryInfo, fromIndex, toIndex)
+			return filteredCaseCounts, nil
+		}
+	}
+	for countryKey, countryInfo := range caseCountsMap {
+		if country == "" || strings.ToLower(country) == strings.ToLower(countryKey) {
+			filteredCaseCounts[countryKey] = copyAndFilterCaseCountsMap(countryInfo, fromIndex, toIndex)
 		}
 	}
 	var err error
@@ -25,30 +64,36 @@ func filterCaseCounts(from string, to string, country string) ([]CaseCounts, err
 	return filteredCaseCounts, err
 }
 
-func convertToAggregatedElement(caseCountsItem CaseCounts, from int, to int, country string, ch chan CaseCountsAggregated, wg *sync.WaitGroup) {
-	if country == "" || strings.ToLower(caseCountsItem.Country) == strings.ToLower(country) {
-		confirmedSum, deathsSum := getStatisticsSum(caseCountsItem.Counts, from, to)
-		ch <- CaseCountsAggregated{stateInformation{caseCountsItem.State, caseCountsItem.Country, caseCountsItem.Lat, caseCountsItem.Long}, statistics{confirmedSum, deathsSum}}
+func syncAggregateCaseCountsMap(countryKey string, countryInfo map[string]CaseCounts, fromIndex int, toIndex int, country string, ch chan aggregatedCaseCountsMap, wg *sync.WaitGroup) {
+	if country == "" || strings.ToLower(countryKey) == strings.ToLower(country) {
+		info := aggregateCaseCountsMap(countryInfo, fromIndex, toIndex)
+		ch <- aggregatedCaseCountsMap{countryKey, info}
 	}
 	wg.Done()
 }
 
-func aggregateDataBetweenDates(from string, to string, country string) ([]CaseCountsAggregated, error) {
+func aggregateDataBetweenDates(from string, to string, country string) (map[string]map[string]CaseCountsAggregated, error) {
 	fromIndex, toIndex := getFromAndToIndices(from, to)
-	var aggregatedData []CaseCountsAggregated
+	aggregatedData := make(map[string]map[string]CaseCountsAggregated)
 	if fromIndex > toIndex {
 		return aggregatedData, fmt.Errorf("From date %s cannot be after to date %s", from, to)
 	}
-	ch := make(chan CaseCountsAggregated, len(caseCountsCache))
+	if country != "" {
+		if countryInfo, ok := caseCountsMap[country]; ok {
+			aggregatedData[country] = aggregateCaseCountsMap(countryInfo, fromIndex, toIndex)
+			return aggregatedData, nil
+		}
+	}
+	ch := make(chan aggregatedCaseCountsMap, len(caseCountsMap))
 	wg := sync.WaitGroup{}
-	for _, caseCountsItem := range caseCountsCache {
+	for countryKey, countryInfo := range caseCountsMap {
 		wg.Add(1)
-		go convertToAggregatedElement(caseCountsItem, fromIndex, toIndex, country, ch, &wg)
+		go syncAggregateCaseCountsMap(countryKey, countryInfo, fromIndex, toIndex, country, ch, &wg)
 	}
 	wg.Wait()
 	close(ch)
 	for caseCountsAgg := range ch {
-		aggregatedData = append(aggregatedData, caseCountsAgg)
+		aggregatedData[caseCountsAgg.country] = caseCountsAgg.info
 	}
 	var err error
 	if country != "" && len(aggregatedData) == 0 {
@@ -57,67 +102,91 @@ func aggregateDataBetweenDates(from string, to string, country string) ([]CaseCo
 	return aggregatedData, err
 }
 
-func aggregateCountryDataFromStatesAggregate(aggregateDataWithStates []CaseCountsAggregated) []CountryCaseCountsAggregated {
-	type countryAggregationInformation struct {
-		LatSum, LongSum                float32
-		ConfirmedSum, DeathsSum, Count int
-	}
-	var countryInformationMap map[string]countryAggregationInformation
-	countryInformationMap = make(map[string]countryAggregationInformation)
-	for _, caseCountsAgg := range aggregateDataWithStates {
-		if val, ok := countryInformationMap[caseCountsAgg.Country]; ok {
-			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, val.ConfirmedSum + caseCountsAgg.Confirmed, val.DeathsSum + caseCountsAgg.Deaths, val.Count + 1}
-		} else {
-			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Confirmed, caseCountsAgg.Deaths, 1}
-		}
-	}
-	var aggregatedData []CountryCaseCountsAggregated
-	for country, information := range countryInformationMap {
-		countF := float32(information.Count)
-		countryCaseCountAgg := CountryCaseCountsAggregated{countryInformation{country, information.LatSum / countF, information.LongSum / countF}, statistics{information.ConfirmedSum, information.DeathsSum}}
-		aggregatedData = append(aggregatedData, countryCaseCountAgg)
-	}
-	return aggregatedData
-}
-
-func aggregateCountryDataFromCaseCounts(caseCounts []CaseCounts) []CountryCaseCounts {
-	type countryAggregationInformation struct {
-		LatSum, LongSum float32
-		Counts          []CaseCount
-		Count           int
-	}
-	var countryInformationMap map[string]countryAggregationInformation
-	countryInformationMap = make(map[string]countryAggregationInformation)
-	for _, caseCountsAgg := range caseCounts {
-		if val, ok := countryInformationMap[caseCountsAgg.Country]; ok {
-			var counts = make([]CaseCount, len(val.Counts))
-			copy(counts, val.Counts)
-			for index := range counts {
-				counts[index].Confirmed += caseCountsAgg.Counts[index].Confirmed
-				counts[index].Deaths += caseCountsAgg.Counts[index].Deaths
-			}
-			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, counts, val.Count + 1}
-		} else {
-			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Counts, 1}
-		}
-	}
-	var aggregatedData []CountryCaseCounts
-	for country, information := range countryInformationMap {
-		countF := float32(information.Count)
-		countryCaseCountAgg := CountryCaseCounts{countryInformation{country, information.LatSum / countF, information.LongSum / countF}, information.Counts}
-		aggregatedData = append(aggregatedData, countryCaseCountAgg)
-	}
-	return aggregatedData
-}
-
-func aggregateWorldData(caseCounts []CaseCounts) []CaseCount {
+func syncSumStates(country string, countryInfo map[string]CaseCounts, ch chan countryMap, wg *sync.WaitGroup) {
+	var latSum, longSum float32
+	count := 0
 	var counts []CaseCount
-	counts = make([]CaseCount, len(caseCounts[0].Counts))
-	copy(counts, caseCounts[0].Counts)
-	for i := 1; i < len(caseCounts); i++ {
-		for j, count := range caseCounts[i].Counts {
-			counts[j].Confirmed += count.Confirmed
-			counts[j].Deaths += count.Deaths
+	for _, stateInfo := range countryInfo {
+		latSum += stateInfo.Lat
+		longSum += stateInfo.Long
+		count++
+		if counts == nil {
+			counts = make([]CaseCount, len(stateInfo.Counts))
+			copy(counts, stateInfo.Counts)
+		} else {
+			for index := range counts {
+				counts[index].Confirmed += stateInfo.Counts[index].Confirmed
+				counts[index].Deaths += stateInfo.Counts[index].Deaths
+			}
+		}
+	}
+	countF := float32(count)
+	ch <- countryMap{country, CaseCounts{Location{latSum / countF, longSum / countF}, counts}}
+	wg.Done()
+}
+
+func aggregateCountryDataFromCaseCounts(caseCountsMap map[string]map[string]CaseCounts) map[string]CaseCounts {
+	ch := make(chan countryMap, len(caseCountsMap))
+	wg := sync.WaitGroup{}
+	aggregatedData := make(map[string]CaseCounts)
+	for country, countryInfo := range caseCountsMap {
+		wg.Add(1)
+		go syncSumStates(country, countryInfo, ch, &wg)
+	}
+	wg.Wait()
+	close(ch)
+	for caseCountsAgg := range ch {
+		aggregatedData[caseCountsAgg.country] = caseCountsAgg.info
+	}
+	return aggregatedData
+}
+
+func syncSumStatesAggregated(country string, countryInfo map[string]CaseCountsAggregated, ch chan countryAggMap, wg *sync.WaitGroup) {
+	var latSum, longSum float32
+	count := 0
+	confirmed := 0
+	deaths := 0
+	for _, stateInfo := range countryInfo {
+		latSum += stateInfo.Lat
+		longSum += stateInfo.Long
+		count++
+		confirmed += stateInfo.Confirmed
+		deaths += stateInfo.Deaths
+	}
+	countF := float32(count)
+	ch <- countryAggMap{country, CaseCountsAggregated{Location{latSum / countF, longSum / countF}, statistics{confirmed, deaths}}}
+	wg.Done()
+}
+
+func aggregateCountryDataFromStatesAggregate(caseCountsMap map[string]map[string]CaseCountsAggregated) map[string]CaseCountsAggregated {
+	ch := make(chan countryAggMap, len(caseCountsMap))
+	wg := sync.WaitGroup{}
+	aggregatedData := make(map[string]CaseCountsAggregated)
+	for country, countryInfo := range caseCountsMap {
+		wg.Add(1)
+		go syncSumStatesAggregated(country, countryInfo, ch, &wg)
+	}
+	wg.Wait()
+	close(ch)
+	for caseCountsAgg := range ch {
+		aggregatedData[caseCountsAgg.country] = caseCountsAgg.info
+	}
+	return aggregatedData
+}
+
+func aggregateWorldData(caseCounts map[string]map[string]CaseCounts) []CaseCount {
+	var counts []CaseCount
+	for _, countryInfo := range caseCounts {
+		for _, stateInfo := range countryInfo {
+			if counts == nil {
+				counts = make([]CaseCount, len(stateInfo.Counts))
+				copy(counts, stateInfo.Counts)
+			} else {
+				for index := range counts {
+					counts[index].Confirmed += stateInfo.Counts[index].Confirmed
+					counts[index].Deaths += stateInfo.Counts[index].Deaths
+				}
+			}
 		}
 	}
 	return counts

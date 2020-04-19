@@ -13,7 +13,7 @@ Deployed at https://yet-another-covid-api.herokuapp.com.
 - Call the endpoint with attributes 'from' and/or 'to' to get the numbers of all confirmed cases and deaths for each state and country between the from date and to date. For example https://yet-another-covid-api.herokuapp.com/cases?from=3/2/20&to=3/10/20.
 - Call the endpoint with attribute 'aggregateCountries' set to true to aggregate the counts to the country level instead of the state level. For example, https://yet-another-covid-api.herokuapp.com/cases?aggregateCountries=true.
 - Call the endpoint with country name in the field 'country' to extract the numbers of confirmed cases and deaths for all states in the country. For example, https://yet-another-covid-api.herokuapp.com/cases?country=Singapore.
-- Call the endoint with attribute 'perDay' set to true to get a returned value without aggregated counts. Each state/country in the list will have a list of days with the cumulative number of confirmed cases and deaths up till that day. For example, https://yet-another-covid-api.herokuapp.com/cases?perDay=true.
+- Call the endoint with attribute 'perDay' set to true to get a returned value without aggregated counts. Each state/country in the response will have a list of days with the cumulative number of confirmed cases and deaths up till that day. For example, https://yet-another-covid-api.herokuapp.com/cases?perDay=true.
 - Call the endoint with attribute 'worldTotal' set to true to get the per day statistics for the world between the given from and to dates. For example, https://yet-another-covid-api.herokuapp.com/cases?from=3/2/20&to=3/10/20&worldTotal=true.
 
 /news:

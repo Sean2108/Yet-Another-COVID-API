@@ -16,14 +16,15 @@ const (
 
 var (
 	// cache the query for getting all data for all states and all countries, because it is the most heavily used
-	allAggregatedData          []CaseCountsAggregated
-	allCountriesAggregatedData []CountryCaseCountsAggregated
+	stateAggregatedMap   map[string]map[string]CaseCountsAggregated
+	countryAggregatedMap map[string]CaseCountsAggregated
 
-	caseCountsCache        []CaseCounts
-	worldCaseCountsCache   []CaseCount
-	countryCaseCountsCache []CountryCaseCounts
-	lastDate               time.Time
-	firstDate              time.Time
+	caseCountsMap        map[string]map[string]CaseCounts
+	countryCaseCountsMap map[string]CaseCounts
+	worldCaseCountsCache []CaseCount
+
+	lastDate  time.Time
+	firstDate time.Time
 
 	client utils.HTTPClient
 )
@@ -35,28 +36,27 @@ func init() {
 // UpdateCaseCounts : Pull data from the John Hopkins CSV files on GitHub, store the result in a cache and also cache the aggregate data for the entire period
 func UpdateCaseCounts() {
 	log.Println("Updating case counts")
-	caseCountsCache = nil
 	confirmedData, deathsData := getData()
 	headerRow := confirmedData[0]
-	extractCaseCounts(headerRow, confirmedData, deathsData)
+	caseCountsMap = extractCaseCounts(headerRow, confirmedData, deathsData)
 	setDateBoundariesAndAllAggregatedData(headerRow)
 }
 
 // GetCaseCountsWithDayData : get case counts for states but without aggregating the counts, so a list of days with number of confirmed cases and deaths on each day is returned
-func GetCaseCountsWithDayData(from string, to string, country string) ([]CaseCounts, error) {
+func GetCaseCountsWithDayData(from string, to string, country string) (map[string]map[string]CaseCounts, error) {
 	if from == "" && to == "" && country == "" {
 		log.Println("GetCaseCounts query for all data with per day information")
-		return caseCountsCache, nil
+		return caseCountsMap, nil
 	}
 	log.Printf("GetCaseCountsWithDayData query from: %s, to: %s, country: %s\n", from, to, country)
 	return filterCaseCounts(from, to, country)
 }
 
 // GetCountryCaseCountsWithDayData : get case counts for countries but without aggregating the counts, so a list of days with number of confirmed cases and deaths on each day is returned
-func GetCountryCaseCountsWithDayData(from string, to string, country string) ([]CountryCaseCounts, error) {
+func GetCountryCaseCountsWithDayData(from string, to string, country string) (map[string]CaseCounts, error) {
 	if from == "" && to == "" && country == "" {
 		log.Println("GetCountryCaseCounts query for all data with per day information")
-		return countryCaseCountsCache, nil
+		return countryCaseCountsMap, nil
 	}
 	log.Printf("GetCountryCaseCountsWithDayData query from: %s, to: %s, country: %s\n", from, to, country)
 	filtered, err := filterCaseCounts(from, to, country)
@@ -64,20 +64,20 @@ func GetCountryCaseCountsWithDayData(from string, to string, country string) ([]
 }
 
 // GetCaseCounts : get case counts for all states between from date and to date. Return case counts for entire period if from and to dates are empty strings
-func GetCaseCounts(from string, to string, country string) ([]CaseCountsAggregated, error) {
+func GetCaseCounts(from string, to string, country string) (map[string]map[string]CaseCountsAggregated, error) {
 	if from == "" && to == "" && country == "" {
 		log.Println("GetCaseCounts query for all data")
-		return allAggregatedData, nil
+		return stateAggregatedMap, nil
 	}
 	log.Printf("GetCaseCounts query from: %s, to: %s, country: %s\n", from, to, country)
 	return aggregateDataBetweenDates(from, to, country)
 }
 
 // GetCountryCaseCounts : get case counts for all countries between from date and to date. Return case counts for entire period if from and to dates are empty strings
-func GetCountryCaseCounts(from string, to string, country string) ([]CountryCaseCountsAggregated, error) {
+func GetCountryCaseCounts(from string, to string, country string) (map[string]CaseCountsAggregated, error) {
 	if from == "" && to == "" && country == "" {
 		log.Println("GetCountryCaseCounts query for all data")
-		return allCountriesAggregatedData, nil
+		return countryAggregatedMap, nil
 	}
 	log.Printf("GetCountryCaseCounts query from: %s, to: %s, country: %s\n", from, to, country)
 	agg, err := aggregateDataBetweenDates(from, to, country)
@@ -97,8 +97,8 @@ func GetWorldCaseCounts(from string, to string) ([]CaseCount, error) {
 func setDateBoundariesAndAllAggregatedData(headerRow []string) {
 	firstDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[4])
 	lastDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[len(headerRow)-1])
-	worldCaseCountsCache = aggregateWorldData(caseCountsCache)
-	allAggregatedData, _ = aggregateDataBetweenDates("", "", "")
-	allCountriesAggregatedData = aggregateCountryDataFromStatesAggregate(allAggregatedData)
-	countryCaseCountsCache = aggregateCountryDataFromCaseCounts(caseCountsCache)
+	worldCaseCountsCache = aggregateWorldData(caseCountsMap)
+	stateAggregatedMap, _ = aggregateDataBetweenDates("", "", "")
+	countryAggregatedMap = aggregateCountryDataFromStatesAggregate(stateAggregatedMap)
+	countryCaseCountsMap = aggregateCountryDataFromCaseCounts(caseCountsMap)
 }

@@ -6,9 +6,16 @@ import (
 	"sync"
 )
 
-func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string) {
+type extractedInformation struct {
+	state   string
+	country string
+	counts  CaseCounts
+}
+
+func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string) map[string]map[string]CaseCounts {
+	caseCountsMap := make(map[string]map[string]CaseCounts)
 	numRows := len(confirmedData)
-	ch := make(chan CaseCounts, numRows-1)
+	ch := make(chan extractedInformation, numRows-1)
 	wg := sync.WaitGroup{}
 	for rowIndex := 1; rowIndex < numRows; rowIndex++ {
 		wg.Add(1)
@@ -16,9 +23,13 @@ func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData 
 	}
 	wg.Wait()
 	close(ch)
-	for caseCountsItem := range ch {
-		caseCountsCache = append(caseCountsCache, caseCountsItem)
+	for item := range ch {
+		if _, ok := caseCountsMap[item.country]; !ok {
+			caseCountsMap[item.country] = make(map[string]CaseCounts)
+		}
+		caseCountsMap[item.country][item.state] = item.counts
 	}
+	return caseCountsMap
 }
 
 func getData() ([][]string, [][]string) {
@@ -53,7 +64,7 @@ func getCaseCountsArrayForState(headerRow []string, confirmedRow []string, death
 	return counts
 }
 
-func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deathsRow []string, ch chan CaseCounts, wg *sync.WaitGroup) {
+func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deathsRow []string, ch chan extractedInformation, wg *sync.WaitGroup) {
 	// skip faulty entry in data
 	if confirmedRow[0] == "Diamond Princess" {
 		wg.Done()
@@ -68,6 +79,6 @@ func getCaseCountsDataForState(headerRow []string, confirmedRow []string, deaths
 	if longError != nil {
 		log.Fatal(longError.Error())
 	}
-	ch <- CaseCounts{stateInformation{confirmedRow[0], confirmedRow[1], float32(lat), float32(long)}, counts}
+	ch <- extractedInformation{confirmedRow[0], confirmedRow[1], CaseCounts{Location{float32(lat), float32(long)}, counts}}
 	wg.Done()
 }
