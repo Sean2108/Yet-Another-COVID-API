@@ -91,6 +91,8 @@ func getNewsForCountryResponse(from string, to string, country string, _ bool, _
 
 func getResponse(getDataFn func(from string, to string, country string, aggregateCountries bool, perDay bool, worldTotal bool) ([]byte, error, error), w writer, URL *url.URL) {
 	log.Println(URL.String())
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	from, to, country, aggregateCountries, perDay, worldTotal, ok := parseURL(URL, false, dateformat.CasesDateFormat)
 	if !ok {
 		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
