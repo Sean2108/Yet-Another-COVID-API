@@ -17,18 +17,18 @@ type writer interface {
 	WriteHeader(statusCode int)
 }
 
-func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool, bool) {
+func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool, bool, bool) {
 	from := parseURLQuery(URL, "from")
 	to := parseURLQuery(URL, "to")
 	country := parseURLQuery(URL, "country")
 
 	from, ok := dateformat.FormatDate(dateFormat, from)
 	if !ok {
-		return "", "", "", false, false, false
+		return "", "", "", false, false, false, false
 	}
 	to, ok = dateformat.FormatDate(dateFormat, to)
 	if !ok {
-		return "", "", "", false, false, false
+		return "", "", "", false, false, false, false
 	}
 
 	var countryLookupFuncToCall func(string) (string, bool)
@@ -42,8 +42,9 @@ func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, st
 	}
 	aggregateCountries := parseURLQuery(URL, "aggregatecountries") == "true"
 	perDay := parseURLQuery(URL, "perday") == "true"
+	worldTotal := parseURLQuery(URL, "worldtotal") == "true"
 
-	return from, to, country, aggregateCountries, perDay, true
+	return from, to, country, aggregateCountries, perDay, worldTotal, true
 }
 
 func parseURLQuery(URL *url.URL, key string) string {
@@ -56,41 +57,46 @@ func parseURLQuery(URL *url.URL, key string) string {
 	return ""
 }
 
-func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error) {
+func getCaseCountsResponse(from string, to string, country string, aggregateCountries bool, perDay bool, worldTotal bool) ([]byte, error, error) {
+	if worldTotal {
+		caseCounts, caseCountsErr := casecount.GetWorldCaseCounts(from, to)
+		response, err := json.Marshal(caseCounts)
+		return response, err, caseCountsErr
+	}
 	if perDay {
 		if aggregateCountries {
-			CaseCounts, caseCountsErr := casecount.GetCountryCaseCountsWithDayData(from, to, country)
-			response, err := json.Marshal(CaseCounts)
+			caseCounts, caseCountsErr := casecount.GetCountryCaseCountsWithDayData(from, to, country)
+			response, err := json.Marshal(caseCounts)
 			return response, err, caseCountsErr
 		}
-		CaseCounts, caseCountsErr := casecount.GetCaseCountsWithDayData(from, to, country)
-		response, err := json.Marshal(CaseCounts)
+		caseCounts, caseCountsErr := casecount.GetCaseCountsWithDayData(from, to, country)
+		response, err := json.Marshal(caseCounts)
 		return response, err, caseCountsErr
 	}
 	if aggregateCountries {
-		CaseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
-		response, err := json.Marshal(CaseCounts)
+		caseCounts, caseCountsErr := casecount.GetCountryCaseCounts(from, to, country)
+		response, err := json.Marshal(caseCounts)
 		return response, err, caseCountsErr
 	}
-	CaseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
-	response, err := json.Marshal(CaseCounts)
+	caseCounts, caseCountsErr := casecount.GetCaseCounts(from, to, country)
+	response, err := json.Marshal(caseCounts)
 	return response, err, caseCountsErr
 }
 
-func getNewsForCountryResponse(from string, to string, country string, _ bool, _ bool) ([]byte, error, error) {
+func getNewsForCountryResponse(from string, to string, country string, _ bool, _ bool, _ bool) ([]byte, error, error) {
 	articles, newsErr := news.GetNews(from, to, country)
 	response, err := json.Marshal(articles)
 	return response, err, newsErr
 }
 
-func getResponse(getDataFn func(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error), w writer, URL *url.URL) {
+func getResponse(getDataFn func(from string, to string, country string, aggregateCountries bool, perDay bool, worldTotal bool) ([]byte, error, error), w writer, URL *url.URL) {
 	log.Println(URL.String())
-	from, to, country, aggregateCountries, perDay, ok := parseURL(URL, false, dateformat.CasesDateFormat)
+	from, to, country, aggregateCountries, perDay, worldTotal, ok := parseURL(URL, false, dateformat.CasesDateFormat)
 	if !ok {
 		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
 		return
 	}
-	response, jsonErr, internalErr := getDataFn(from, to, country, aggregateCountries, perDay)
+	response, jsonErr, internalErr := getDataFn(from, to, country, aggregateCountries, perDay, worldTotal)
 	if internalErr != nil {
 		http.Error(w, internalErr.Error(), http.StatusBadRequest)
 		return

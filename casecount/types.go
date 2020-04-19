@@ -5,7 +5,7 @@ type statistics struct {
 	Deaths    int
 }
 
-type caseCount struct {
+type CaseCount struct {
 	Date string
 	statistics
 }
@@ -26,13 +26,13 @@ type countryInformation struct {
 // CaseCounts : contains information about the state,country and latitude longitude as well as the per day cumulative number of confirmed cases/deaths
 type CaseCounts struct {
 	stateInformation
-	Counts []caseCount
+	Counts []CaseCount
 }
 
 // CountryCaseCounts : contains information about the state,country and latitude longitude as well as the per day cumulative number of confirmed cases/deaths
 type CountryCaseCounts struct {
 	countryInformation
-	Counts []caseCount
+	Counts []CaseCount
 }
 
 // CaseCountsAggregated : contains the information about the state, country and the latitude/longitude as well as the number of confirmed cases/deaths

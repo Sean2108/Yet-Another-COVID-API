@@ -29,7 +29,7 @@ func getDaysBetweenDates(startDate time.Time, endDate time.Time) int {
 	return int(endDate.Sub(startDate).Hours() / 24)
 }
 
-func getStatisticsSum(input []caseCount, fromIndex int, toIndex int) (int, int) {
+func getStatisticsSum(input []CaseCount, fromIndex int, toIndex int) (int, int) {
 	confirmedAtStartDate := 0
 	deathsAtStartDate := 0
 

@@ -35,6 +35,14 @@ func (a *CountryCaseCounts) equals(b CountryCaseCounts) bool {
 	return true
 }
 
+func verifyResultsCaseCountArr(result []CaseCount, expectedData []CaseCount, t *testing.T) {
+	for i, item := range result {
+		if item != expectedData[i] {
+			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
+		}
+	}
+}
+
 func verifyResultsCaseCountsArr(result []CaseCounts, expectedData []CaseCounts, t *testing.T) {
 	sort.Sort(ByCountryAndStateForCaseCounts(result))
 	for i, item := range result {

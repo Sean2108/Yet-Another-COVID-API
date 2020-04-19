@@ -36,8 +36,8 @@ func getData() ([][]string, [][]string) {
 	return confirmedData, deathsData
 }
 
-func getCaseCountsArrayForState(headerRow []string, confirmedRow []string, deathsRow []string) []caseCount {
-	var counts []caseCount
+func getCaseCountsArrayForState(headerRow []string, confirmedRow []string, deathsRow []string) []CaseCount {
+	var counts []CaseCount
 	for colIndex := 4; colIndex < len(confirmedRow); colIndex++ {
 		confirmedCount, confirmedErr := strconv.Atoi(confirmedRow[colIndex])
 		if confirmedErr != nil {
@@ -47,7 +47,7 @@ func getCaseCountsArrayForState(headerRow []string, confirmedRow []string, death
 		if deathsErr != nil {
 			log.Fatal(deathsErr.Error())
 		}
-		caseCountItem := caseCount{headerRow[colIndex], statistics{confirmedCount, deathsCount}}
+		caseCountItem := CaseCount{headerRow[colIndex], statistics{confirmedCount, deathsCount}}
 		counts = append(counts, caseCountItem)
 	}
 	return counts

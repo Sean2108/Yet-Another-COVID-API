@@ -23,24 +23,24 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 
 func getTestCacheData() []CaseCounts {
 	data1 := CaseCounts{stateInformation{"", "Afghanistan", 33.0, 65.1},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{2, 2}},
-			caseCount{"1/23/20", statistics{3, 3}},
-			caseCount{"1/24/20", statistics{4, 4}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{2, 2}},
+			CaseCount{"1/23/20", statistics{3, 3}},
+			CaseCount{"1/24/20", statistics{4, 4}},
 		},
 	}
 	data2 := CaseCounts{stateInformation{"", "Albania", 41.1533, 20.1683},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{4, 4}},
-			caseCount{"1/23/20", statistics{5, 5}},
-			caseCount{"1/24/20", statistics{6, 6}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{4, 4}},
+			CaseCount{"1/23/20", statistics{5, 5}},
+			CaseCount{"1/24/20", statistics{6, 6}},
 		},
 	}
 	data3 := CaseCounts{stateInformation{"", "Algeria", 28.0339, 1.6596},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{7, 7}},
-			caseCount{"1/23/20", statistics{8, 8}},
-			caseCount{"1/24/20", statistics{9, 9}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{7, 7}},
+			CaseCount{"1/23/20", statistics{8, 8}},
+			CaseCount{"1/24/20", statistics{9, 9}},
 		},
 	}
 	return []CaseCounts{data1, data2, data3}
@@ -128,10 +128,10 @@ func TestGetDaysBetweenDates(t *testing.T) {
 }
 
 func TestGetStatisticsSum(t *testing.T) {
-	var input = []caseCount{
-		caseCount{"a", statistics{2, 1}},
-		caseCount{"b", statistics{4, 2}},
-		caseCount{"c", statistics{7, 5}},
+	var input = []CaseCount{
+		CaseCount{"a", statistics{2, 1}},
+		CaseCount{"b", statistics{4, 2}},
+		CaseCount{"c", statistics{7, 5}},
 	}
 
 	tables := []struct {

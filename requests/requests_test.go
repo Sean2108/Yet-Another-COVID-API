@@ -29,7 +29,7 @@ func (w *fakeWriter) WriteHeader(statusCode int) {
 	return
 }
 
-func callTestFn(from string, to string, country string, aggregateCountries bool, perDay bool) ([]byte, error, error) {
+func callTestFn(from string, to string, country string, aggregateCountries bool, perDay bool, worldTotal bool) ([]byte, error, error) {
 	testFnCalled = true
 	return []byte("response"), nil, nil
 }
@@ -43,27 +43,30 @@ func TestParseUrlQuery(t *testing.T) {
 		country            string
 		aggregateCountries bool
 		perDay             bool
+		worldTotal         bool
 	}{
-		{"http://localhost:8080/cases", false, "", "", "", false, false},
-		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20", false, "1/1/20", "1/2/20", "", false, false},
-		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false, false},
-		{"http://localhost:8080/cases?from=&to=&country=CN", false, "", "", "China", false, false},
-		{"http://localhost:8080/cases?from=&to=&country=gb", false, "", "", "United Kingdom", false, false},
-		{"http://localhost:8080/cases?country=United Kingdom", false, "", "", "United Kingdom", false, false},
-		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", false, "", "", "Singapore", true, false},
-		{"http://localhost:8080/cases?aggregatecountries=true&country=sg", false, "", "", "Singapore", true, false},
-		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", true, "", "", "sg", false, false},
-		{"http://localhost:8080/cases?aggregateCountries=tru&country=Sngapore", true, "", "", "Sngapore", false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true&perDay=false", false, "1/1/20", "1/2/20", "Singapore", true, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=false&perDay=true", false, "1/1/20", "1/2/20", "Singapore", false, true},
-		{"http://localhost:8080/cases?from=1/32/20&to=1/2/20&country=Singapore&aggregateCountries=true", false, "", "", "", false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/32/20&country=Singapore&aggregateCountries=true", false, "", "", "", false, false},
+		{"http://localhost:8080/cases", false, "", "", "", false, false, false},
+		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false, false, false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20", false, "1/1/20", "1/2/20", "", false, false, false},
+		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false, false, false},
+		{"http://localhost:8080/cases?from=&to=&country=CN", false, "", "", "China", false, false, false},
+		{"http://localhost:8080/cases?from=&to=&country=gb", false, "", "", "United Kingdom", false, false, false},
+		{"http://localhost:8080/cases?country=United Kingdom", false, "", "", "United Kingdom", false, false, false},
+		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", false, "", "", "Singapore", true, false, false},
+		{"http://localhost:8080/cases?aggregatecountries=true&country=sg", false, "", "", "Singapore", true, false, false},
+		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", true, "", "", "sg", false, false, false},
+		{"http://localhost:8080/cases?aggregateCountries=tru&country=Sngapore", true, "", "", "Sngapore", false, false, false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true&perDay=false", false, "1/1/20", "1/2/20", "Singapore", true, false, false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=false&perDay=true", false, "1/1/20", "1/2/20", "Singapore", false, true, false},
+		{"http://localhost:8080/cases?from=1/32/20&to=1/2/20&country=Singapore&aggregateCountries=true", false, "", "", "", false, false, false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/32/20&country=Singapore&aggregateCountries=true", false, "", "", "", false, false, false},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/30/20&worldTotal=true", false, "1/1/20", "1/30/20", "", false, false, true},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/30/20&worldTotal=false", false, "1/1/20", "1/30/20", "", false, false, false},
 	}
 
 	for _, table := range tables {
 		url, _ := url.Parse(table.rawurl)
-		from, to, country, aggregateCountries, perDay, _ := parseURL(url, table.getAbbreviation, dateformat.CasesDateFormat)
+		from, to, country, aggregateCountries, perDay, worldTotal, _ := parseURL(url, table.getAbbreviation, dateformat.CasesDateFormat)
 		if from != table.from {
 			t.Errorf("result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, from, table.from)
 		}
@@ -78,6 +81,9 @@ func TestParseUrlQuery(t *testing.T) {
 		}
 		if perDay != table.perDay {
 			t.Errorf("result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, perDay, table.perDay)
+		}
+		if worldTotal != table.worldTotal {
+			t.Errorf("result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, worldTotal, table.worldTotal)
 		}
 	}
 }
@@ -100,7 +106,7 @@ func TestGetCaseCountsResponse_PerDay(t *testing.T) {
 
 	for _, table := range tables {
 		casecount.UpdateCaseCounts()
-		response, err, caseCountErr := getCaseCountsResponse("", "", table.country, table.aggregateCountries, table.perDay)
+		response, err, caseCountErr := getCaseCountsResponse("", "", table.country, table.aggregateCountries, table.perDay, false)
 		if table.expectedSuccess {
 			if len(response) < 3 {
 				t.Errorf("Response should not be empty, got length: %d, want length: %s.", len(response), "more than 2")

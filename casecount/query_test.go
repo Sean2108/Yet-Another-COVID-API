@@ -7,53 +7,53 @@ import (
 
 func getTestCaseCounts() []CaseCounts {
 	expectedBeijingData := CaseCounts{stateInformation{"Beijing", "China", 40.1824, 116.4142},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{50, 10}},
-			caseCount{"1/23/20", statistics{200, 87}},
-			caseCount{"1/24/20", statistics{800, 125}},
-			caseCount{"1/25/20", statistics{1020, 142}},
-			caseCount{"1/26/20", statistics{1110, 145}},
-			caseCount{"1/27/20", statistics{1235, 152}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{50, 10}},
+			CaseCount{"1/23/20", statistics{200, 87}},
+			CaseCount{"1/24/20", statistics{800, 125}},
+			CaseCount{"1/25/20", statistics{1020, 142}},
+			CaseCount{"1/26/20", statistics{1110, 145}},
+			CaseCount{"1/27/20", statistics{1235, 152}},
 		},
 	}
 	expectedHubeiData := CaseCounts{stateInformation{"Hubei", "China", 30.9756, 112.2707},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{100, 20}},
-			caseCount{"1/23/20", statistics{1000, 100}},
-			caseCount{"1/24/20", statistics{1800, 105}},
-			caseCount{"1/25/20", statistics{2020, 150}},
-			caseCount{"1/26/20", statistics{2110, 175}},
-			caseCount{"1/27/20", statistics{2111, 230}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{100, 20}},
+			CaseCount{"1/23/20", statistics{1000, 100}},
+			CaseCount{"1/24/20", statistics{1800, 105}},
+			CaseCount{"1/25/20", statistics{2020, 150}},
+			CaseCount{"1/26/20", statistics{2110, 175}},
+			CaseCount{"1/27/20", statistics{2111, 230}},
 		},
 	}
 	expectedShanghaiData := CaseCounts{stateInformation{"Shanghai", "China", 31.202, 121.4491},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{10, 5}},
-			caseCount{"1/23/20", statistics{45, 8}},
-			caseCount{"1/24/20", statistics{89, 20}},
-			caseCount{"1/25/20", statistics{126, 25}},
-			caseCount{"1/26/20", statistics{400, 42}},
-			caseCount{"1/27/20", statistics{532, 55}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{10, 5}},
+			CaseCount{"1/23/20", statistics{45, 8}},
+			CaseCount{"1/24/20", statistics{89, 20}},
+			CaseCount{"1/25/20", statistics{126, 25}},
+			CaseCount{"1/26/20", statistics{400, 42}},
+			CaseCount{"1/27/20", statistics{532, 55}},
 		},
 	}
 	expectedSingaporeData := CaseCounts{stateInformation{"", "Singapore", 1.2833, 103.8333},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{1, 0}},
-			caseCount{"1/23/20", statistics{3, 2}},
-			caseCount{"1/24/20", statistics{6, 4}},
-			caseCount{"1/25/20", statistics{10, 5}},
-			caseCount{"1/26/20", statistics{15, 8}},
-			caseCount{"1/27/20", statistics{23, 10}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{1, 0}},
+			CaseCount{"1/23/20", statistics{3, 2}},
+			CaseCount{"1/24/20", statistics{6, 4}},
+			CaseCount{"1/25/20", statistics{10, 5}},
+			CaseCount{"1/26/20", statistics{15, 8}},
+			CaseCount{"1/27/20", statistics{23, 10}},
 		},
 	}
 	expectedLondonData := CaseCounts{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004},
-		[]caseCount{
-			caseCount{"1/22/20", statistics{1, 0}},
-			caseCount{"1/23/20", statistics{6, 1}},
-			caseCount{"1/24/20", statistics{8, 3}},
-			caseCount{"1/25/20", statistics{9, 6}},
-			caseCount{"1/26/20", statistics{20, 6}},
-			caseCount{"1/27/20", statistics{28, 9}},
+		[]CaseCount{
+			CaseCount{"1/22/20", statistics{1, 0}},
+			CaseCount{"1/23/20", statistics{6, 1}},
+			CaseCount{"1/24/20", statistics{8, 3}},
+			CaseCount{"1/25/20", statistics{9, 6}},
+			CaseCount{"1/26/20", statistics{20, 6}},
+			CaseCount{"1/27/20", statistics{28, 9}},
 		},
 	}
 	return []CaseCounts{expectedBeijingData, expectedHubeiData, expectedShanghaiData, expectedSingaporeData, expectedLondonData}
@@ -61,43 +61,43 @@ func getTestCaseCounts() []CaseCounts {
 
 func getTestCaseCountsWithoutFirstAndLastDay() []CaseCounts {
 	expectedBeijingData := CaseCounts{stateInformation{"Beijing", "China", 40.1824, 116.4142},
-		[]caseCount{
-			caseCount{"1/23/20", statistics{200, 87}},
-			caseCount{"1/24/20", statistics{800, 125}},
-			caseCount{"1/25/20", statistics{1020, 142}},
-			caseCount{"1/26/20", statistics{1110, 145}},
+		[]CaseCount{
+			CaseCount{"1/23/20", statistics{200, 87}},
+			CaseCount{"1/24/20", statistics{800, 125}},
+			CaseCount{"1/25/20", statistics{1020, 142}},
+			CaseCount{"1/26/20", statistics{1110, 145}},
 		},
 	}
 	expectedHubeiData := CaseCounts{stateInformation{"Hubei", "China", 30.9756, 112.2707},
-		[]caseCount{
-			caseCount{"1/23/20", statistics{1000, 100}},
-			caseCount{"1/24/20", statistics{1800, 105}},
-			caseCount{"1/25/20", statistics{2020, 150}},
-			caseCount{"1/26/20", statistics{2110, 175}},
+		[]CaseCount{
+			CaseCount{"1/23/20", statistics{1000, 100}},
+			CaseCount{"1/24/20", statistics{1800, 105}},
+			CaseCount{"1/25/20", statistics{2020, 150}},
+			CaseCount{"1/26/20", statistics{2110, 175}},
 		},
 	}
 	expectedShanghaiData := CaseCounts{stateInformation{"Shanghai", "China", 31.202, 121.4491},
-		[]caseCount{
-			caseCount{"1/23/20", statistics{45, 8}},
-			caseCount{"1/24/20", statistics{89, 20}},
-			caseCount{"1/25/20", statistics{126, 25}},
-			caseCount{"1/26/20", statistics{400, 42}},
+		[]CaseCount{
+			CaseCount{"1/23/20", statistics{45, 8}},
+			CaseCount{"1/24/20", statistics{89, 20}},
+			CaseCount{"1/25/20", statistics{126, 25}},
+			CaseCount{"1/26/20", statistics{400, 42}},
 		},
 	}
 	expectedSingaporeData := CaseCounts{stateInformation{"", "Singapore", 1.2833, 103.8333},
-		[]caseCount{
-			caseCount{"1/23/20", statistics{3, 2}},
-			caseCount{"1/24/20", statistics{6, 4}},
-			caseCount{"1/25/20", statistics{10, 5}},
-			caseCount{"1/26/20", statistics{15, 8}},
+		[]CaseCount{
+			CaseCount{"1/23/20", statistics{3, 2}},
+			CaseCount{"1/24/20", statistics{6, 4}},
+			CaseCount{"1/25/20", statistics{10, 5}},
+			CaseCount{"1/26/20", statistics{15, 8}},
 		},
 	}
 	expectedLondonData := CaseCounts{stateInformation{"London", "United Kingdom", 55.3781, -3.4360000000000004},
-		[]caseCount{
-			caseCount{"1/23/20", statistics{6, 1}},
-			caseCount{"1/24/20", statistics{8, 3}},
-			caseCount{"1/25/20", statistics{9, 6}},
-			caseCount{"1/26/20", statistics{20, 6}},
+		[]CaseCount{
+			CaseCount{"1/23/20", statistics{6, 1}},
+			CaseCount{"1/24/20", statistics{8, 3}},
+			CaseCount{"1/25/20", statistics{9, 6}},
+			CaseCount{"1/26/20", statistics{20, 6}},
 		},
 	}
 	return []CaseCounts{expectedBeijingData, expectedHubeiData, expectedShanghaiData, expectedSingaporeData, expectedLondonData}
@@ -431,24 +431,58 @@ func TestCountryAggregateDataPerDay_QueryDates(t *testing.T) {
 	}
 	expectedData := []CountryCaseCounts{
 		CountryCaseCounts{countryInformation{"China", (40.1824 + 30.9756 + 31.202) / 3.0, (116.4142 + 112.2707 + 121.4491) / 3.0},
-			[]caseCount{
-				caseCount{"1/23/20", statistics{1245, 195}},
-				caseCount{"1/24/20", statistics{2689, 250}},
-				caseCount{"1/25/20", statistics{3166, 317}},
-				caseCount{"1/26/20", statistics{3620, 362}},
+			[]CaseCount{
+				CaseCount{"1/23/20", statistics{1245, 195}},
+				CaseCount{"1/24/20", statistics{2689, 250}},
+				CaseCount{"1/25/20", statistics{3166, 317}},
+				CaseCount{"1/26/20", statistics{3620, 362}},
 			}},
-		CountryCaseCounts{countryInformation{"Singapore", 1.2833, 103.8333}, []caseCount{
-			caseCount{"1/23/20", statistics{3, 2}},
-			caseCount{"1/24/20", statistics{6, 4}},
-			caseCount{"1/25/20", statistics{10, 5}},
-			caseCount{"1/26/20", statistics{15, 8}},
+		CountryCaseCounts{countryInformation{"Singapore", 1.2833, 103.8333}, []CaseCount{
+			CaseCount{"1/23/20", statistics{3, 2}},
+			CaseCount{"1/24/20", statistics{6, 4}},
+			CaseCount{"1/25/20", statistics{10, 5}},
+			CaseCount{"1/26/20", statistics{15, 8}},
 		}},
-		CountryCaseCounts{countryInformation{"United Kingdom", 55.3781, -3.4360000000000004}, []caseCount{
-			caseCount{"1/23/20", statistics{6, 1}},
-			caseCount{"1/24/20", statistics{8, 3}},
-			caseCount{"1/25/20", statistics{9, 6}},
-			caseCount{"1/26/20", statistics{20, 6}},
+		CountryCaseCounts{countryInformation{"United Kingdom", 55.3781, -3.4360000000000004}, []CaseCount{
+			CaseCount{"1/23/20", statistics{6, 1}},
+			CaseCount{"1/24/20", statistics{8, 3}},
+			CaseCount{"1/25/20", statistics{9, 6}},
+			CaseCount{"1/26/20", statistics{20, 6}},
 		}},
 	}
 	verifyResultsCountryCaseCountsArr(result, expectedData, t)
+}
+
+func TestWorldTotal_AllDates(t *testing.T) {
+	caseCountsCache = getTestCaseCounts()
+	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
+	result, _ := GetWorldCaseCounts("", "")
+	if len(result) != 6 {
+		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
+	}
+	expectedData := []CaseCount{
+		CaseCount{"1/22/20", statistics{162, 35}},
+		CaseCount{"1/23/20", statistics{1254, 198}},
+		CaseCount{"1/24/20", statistics{2703, 257}},
+		CaseCount{"1/25/20", statistics{3185, 328}},
+		CaseCount{"1/26/20", statistics{3655, 376}},
+		CaseCount{"1/27/20", statistics{3929, 456}},
+	}
+	verifyResultsCaseCountArr(result, expectedData, t)
+}
+
+func TestWorldTotal_QueryDates(t *testing.T) {
+	caseCountsCache = getTestCaseCounts()
+	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
+	result, _ := GetWorldCaseCounts("1/23/20", "1/26/20")
+	if len(result) != 4 {
+		t.Errorf("Length of results is incorrect, got: %d, want %d.", len(result), 3)
+	}
+	expectedData := []CaseCount{
+		CaseCount{"1/23/20", statistics{1254, 198}},
+		CaseCount{"1/24/20", statistics{2703, 257}},
+		CaseCount{"1/25/20", statistics{3185, 328}},
+		CaseCount{"1/26/20", statistics{3655, 376}},
+	}
+	verifyResultsCaseCountArr(result, expectedData, t)
 }

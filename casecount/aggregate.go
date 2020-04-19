@@ -58,17 +58,17 @@ func aggregateDataBetweenDates(from string, to string, country string) ([]CaseCo
 }
 
 func aggregateCountryDataFromStatesAggregate(aggregateDataWithStates []CaseCountsAggregated) []CountryCaseCountsAggregated {
-	type CountryAggregationInformation struct {
+	type countryAggregationInformation struct {
 		LatSum, LongSum                float32
 		ConfirmedSum, DeathsSum, Count int
 	}
-	var countryInformationMap map[string]CountryAggregationInformation
-	countryInformationMap = make(map[string]CountryAggregationInformation)
+	var countryInformationMap map[string]countryAggregationInformation
+	countryInformationMap = make(map[string]countryAggregationInformation)
 	for _, caseCountsAgg := range aggregateDataWithStates {
 		if val, ok := countryInformationMap[caseCountsAgg.Country]; ok {
-			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, val.ConfirmedSum + caseCountsAgg.Confirmed, val.DeathsSum + caseCountsAgg.Deaths, val.Count + 1}
+			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, val.ConfirmedSum + caseCountsAgg.Confirmed, val.DeathsSum + caseCountsAgg.Deaths, val.Count + 1}
 		} else {
-			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Confirmed, caseCountsAgg.Deaths, 1}
+			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Confirmed, caseCountsAgg.Deaths, 1}
 		}
 	}
 	var aggregatedData []CountryCaseCountsAggregated
@@ -81,24 +81,24 @@ func aggregateCountryDataFromStatesAggregate(aggregateDataWithStates []CaseCount
 }
 
 func aggregateCountryDataFromCaseCounts(caseCounts []CaseCounts) []CountryCaseCounts {
-	type CountryAggregationInformation struct {
+	type countryAggregationInformation struct {
 		LatSum, LongSum float32
-		Counts          []caseCount
+		Counts          []CaseCount
 		Count           int
 	}
-	var countryInformationMap map[string]CountryAggregationInformation
-	countryInformationMap = make(map[string]CountryAggregationInformation)
+	var countryInformationMap map[string]countryAggregationInformation
+	countryInformationMap = make(map[string]countryAggregationInformation)
 	for _, caseCountsAgg := range caseCounts {
 		if val, ok := countryInformationMap[caseCountsAgg.Country]; ok {
-			var counts = make([]caseCount, len(val.Counts))
+			var counts = make([]CaseCount, len(val.Counts))
 			copy(counts, val.Counts)
 			for index := range counts {
 				counts[index].Confirmed += caseCountsAgg.Counts[index].Confirmed
 				counts[index].Deaths += caseCountsAgg.Counts[index].Deaths
 			}
-			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, counts, val.Count + 1}
+			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{val.LatSum + caseCountsAgg.Lat, val.LongSum + caseCountsAgg.Long, counts, val.Count + 1}
 		} else {
-			countryInformationMap[caseCountsAgg.Country] = CountryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Counts, 1}
+			countryInformationMap[caseCountsAgg.Country] = countryAggregationInformation{caseCountsAgg.Lat, caseCountsAgg.Long, caseCountsAgg.Counts, 1}
 		}
 	}
 	var aggregatedData []CountryCaseCounts
@@ -108,4 +108,25 @@ func aggregateCountryDataFromCaseCounts(caseCounts []CaseCounts) []CountryCaseCo
 		aggregatedData = append(aggregatedData, countryCaseCountAgg)
 	}
 	return aggregatedData
+}
+
+func aggregateWorldData(caseCounts []CaseCounts) []CaseCount {
+	var counts []CaseCount
+	counts = make([]CaseCount, len(caseCounts[0].Counts))
+	copy(counts, caseCounts[0].Counts)
+	for i := 1; i < len(caseCounts); i++ {
+		for j, count := range caseCounts[i].Counts {
+			counts[j].Confirmed += count.Confirmed
+			counts[j].Deaths += count.Deaths
+		}
+	}
+	return counts
+}
+
+func getWorldDataBetweenDates(from string, to string) ([]CaseCount, error) {
+	fromIndex, toIndex := getFromAndToIndices(from, to)
+	if fromIndex > toIndex {
+		return nil, fmt.Errorf("From date %s cannot be after to date %s", from, to)
+	}
+	return worldCaseCountsCache[fromIndex : toIndex+1], nil
 }

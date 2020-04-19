@@ -20,7 +20,7 @@ var (
 	allCountriesAggregatedData []CountryCaseCountsAggregated
 
 	caseCountsCache        []CaseCounts
-	worldCaseCountsCache   []CaseCounts
+	worldCaseCountsCache   []CaseCount
 	countryCaseCountsCache []CountryCaseCounts
 	lastDate               time.Time
 	firstDate              time.Time
@@ -84,9 +84,20 @@ func GetCountryCaseCounts(from string, to string, country string) ([]CountryCase
 	return aggregateCountryDataFromStatesAggregate(agg), err
 }
 
+// GetWorldCaseCounts : get case counts for the world.
+func GetWorldCaseCounts(from string, to string) ([]CaseCount, error) {
+	if from == "" && to == "" {
+		log.Println("GetWorldCaseCounts query for all data")
+		return worldCaseCountsCache, nil
+	}
+	log.Printf("GetWorldCaseCounts query from: %s, to: %s\n", from, to)
+	return getWorldDataBetweenDates(from, to)
+}
+
 func setDateBoundariesAndAllAggregatedData(headerRow []string) {
 	firstDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[4])
 	lastDate, _ = time.Parse(dateformat.CasesDateFormat, headerRow[len(headerRow)-1])
+	worldCaseCountsCache = aggregateWorldData(caseCountsCache)
 	allAggregatedData, _ = aggregateDataBetweenDates("", "", "")
 	allCountriesAggregatedData = aggregateCountryDataFromStatesAggregate(allAggregatedData)
 	countryCaseCountsCache = aggregateCountryDataFromCaseCounts(caseCountsCache)
