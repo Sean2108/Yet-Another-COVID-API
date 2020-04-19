@@ -486,3 +486,12 @@ func TestWorldTotal_QueryDates(t *testing.T) {
 	}
 	verifyResultsCaseCountArr(result, expectedData, t)
 }
+
+func TestWorldTotal_QueryFromDateAfterToDate(t *testing.T) {
+	caseCountsCache = getTestCaseCounts()
+	setDateBoundariesAndAllAggregatedData([]string{"Province/State", "Country/Region", "Lat", "Long", "1/22/20", "1/23/20", "1/24/20", "1/25/20", "1/26/20", "1/27/20"})
+	_, err := GetWorldCaseCounts("1/24/20", "1/23/20")
+	if err == nil {
+		t.Error("Error message should be returned.")
+	}
+}

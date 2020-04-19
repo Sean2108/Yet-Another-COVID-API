@@ -101,6 +101,7 @@ func TestGetCaseCountsResponse_PerDay(t *testing.T) {
 		{"", true, false, true},
 		{"Ssingapore", true, false, false},
 		{"", false, false, true},
+		{"", true, true, true},
 		{"Ssingapore", false, false, false},
 	}
 
@@ -126,15 +127,22 @@ func TestGetCaseCountsResponse_PerDay(t *testing.T) {
 }
 
 func TestGetResponse(t *testing.T) {
-	fakeResponse = []byte("")
-	testFnCalled = false
-	inputURL, _ := url.Parse("http://localhost:8080/cases?country=sg")
-	getResponse(callTestFn, &fakeWriter{}, inputURL)
-	if !testFnCalled {
-		t.Error("callTestFn should have been called, but it was not.")
+	testURLs := []string{
+		"http://localhost:8080/cases?country=sg",
+		"http://localhost:8080/cases?worldTotal=true",
+		"http://localhost:8080/news?country=Singapore",
 	}
-	if string(fakeResponse) != "response" {
-		t.Errorf("fakeResponse should have been modified, got: %s, want: response", fakeResponse)
+	for _, testURL := range testURLs {
+		fakeResponse = []byte("")
+		testFnCalled = false
+		inputURL, _ := url.Parse(testURL)
+		getResponse(callTestFn, &fakeWriter{}, inputURL)
+		if !testFnCalled {
+			t.Error("callTestFn should have been called, but it was not.")
+		}
+		if string(fakeResponse) != "response" {
+			t.Errorf("fakeResponse should have been modified, got: %s, want: response", fakeResponse)
+		}
 	}
 }
 
