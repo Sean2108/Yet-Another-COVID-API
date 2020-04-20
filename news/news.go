@@ -104,8 +104,12 @@ func formatResponse(input []inputArticle) []Article {
 	wg.Wait()
 	close(ch)
 	var result []Article
+	set := make(map[string]bool)
 	for item := range ch {
-		result = append(result, item)
+		if _, ok := set[item.Title]; !ok {
+			set[item.Title] = true
+			result = append(result, item)
+		}
 	}
 	return result
 }

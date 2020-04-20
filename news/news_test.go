@@ -112,6 +112,7 @@ func TestGetNews_MalformedJSON(t *testing.T) {
 func TestFormatResponse(t *testing.T) {
 	input := []inputArticle{
 		inputArticle{inputSource{"google-news", "Google News"}, "ST", "headline", "desc", "testUrl", "imgUrl", "2020-04-02T01:01:22Z", "testcontent"},
+		inputArticle{inputSource{"google-news3", "Google News2"}, "ST2", "headline2", "desc2", "testUrl2", "imgUrl2", "2020-04-02T02:01:22Z", "testcontent2"},
 		inputArticle{inputSource{"google-news2", "Google News2"}, "ST2", "headline2", "desc2", "testUrl2", "imgUrl2", "2020-04-02T02:01:22Z", "testcontent2"},
 	}
 	expected := []Article{
