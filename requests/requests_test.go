@@ -136,7 +136,7 @@ func TestGetResponse(t *testing.T) {
 		fakeResponse = []byte("")
 		testFnCalled = false
 		inputURL, _ := url.Parse(testURL)
-		getResponse(callTestFn, &fakeWriter{}, inputURL)
+		getResponse(callTestFn, &fakeWriter{}, inputURL, true)
 		if !testFnCalled {
 			t.Error("callTestFn should have been called, but it was not.")
 		}
@@ -150,7 +150,7 @@ func TestGetResponse_shouldFailWhenDateIsMalformed(t *testing.T) {
 	fakeResponse = []byte("")
 	testFnCalled = false
 	inputURL, _ := url.Parse("http://localhost:8080/cases?from=3/32/20")
-	getResponse(callTestFn, &fakeWriter{}, inputURL)
+	getResponse(callTestFn, &fakeWriter{}, inputURL, false)
 	if testFnCalled {
 		t.Error("callTestFn should not have been called, but it was.")
 	}
