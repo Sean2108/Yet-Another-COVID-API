@@ -16,12 +16,12 @@ var client utils.HTTPClient
 
 // Article : the relevant information of each article that was retrieved
 type Article struct {
-	Source       string
-	Title        string
-	Description  string
-	URL          string
-	ThumbnailURL string
-	PublishedAt  string
+	Source       string `json:"source"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	URL          string `json:"url"`
+	ThumbnailURL string `json:"thumbnailUrl"`
+	PublishedAt  string `json:"publishedAt"`
 }
 
 type inputSource struct {

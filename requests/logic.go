@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"yet-another-covid-map-api/casecount"
 	"yet-another-covid-map-api/dateformat"
@@ -40,11 +41,18 @@ func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, st
 	if countryFromAbbr, ok := countryLookupFuncToCall(country); ok {
 		country = countryFromAbbr
 	}
-	aggregateCountries := parseURLQuery(URL, "aggregatecountries") == "true"
-	perDay := parseURLQuery(URL, "perday") == "true"
-	worldTotal := parseURLQuery(URL, "worldtotal") == "true"
+	aggregateCountries := isStringTrue(parseURLQuery(URL, "aggregatecountries"))
+	perDay := isStringTrue(parseURLQuery(URL, "perday"))
+	worldTotal := isStringTrue(parseURLQuery(URL, "worldtotal"))
 
 	return from, to, country, aggregateCountries, perDay, worldTotal, true
+}
+
+func isStringTrue(str string) bool {
+	if val, err := strconv.ParseBool(str); err == nil {
+		return val
+	}
+	return false
 }
 
 func parseURLQuery(URL *url.URL, key string) string {

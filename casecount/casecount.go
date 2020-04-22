@@ -3,6 +3,7 @@ package casecount
 import (
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"yet-another-covid-map-api/dateformat"
@@ -26,6 +27,8 @@ var (
 	lastDate  time.Time
 	firstDate time.Time
 
+	mux sync.Mutex
+
 	client utils.HTTPClient
 )
 
@@ -38,6 +41,8 @@ func UpdateCaseCounts() {
 	log.Println("Updating case counts")
 	confirmedData, deathsData := getData()
 	headerRow := confirmedData[0]
+	mux.Lock()
+	defer mux.Unlock()
 	caseCountsMap = extractCaseCounts(headerRow, confirmedData, deathsData)
 	setDateBoundariesAndAllAggregatedData(headerRow)
 }
