@@ -3,6 +3,7 @@ package casecount
 type statistics struct {
 	Confirmed int `json:"confirmed"`
 	Deaths    int `json:"deaths"`
+	Recovered int `json:"recovered"`
 }
 
 // CaseCount : contains stattics for given date

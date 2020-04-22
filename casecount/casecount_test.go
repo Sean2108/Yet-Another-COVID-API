@@ -27,9 +27,9 @@ func getTestCacheData() map[string]map[string]CaseCounts {
 			"": CaseCounts{
 				Location{33.0, 65.1},
 				[]CaseCount{
-					CaseCount{"1/22/20", statistics{2, 2}},
-					CaseCount{"1/23/20", statistics{3, 3}},
-					CaseCount{"1/24/20", statistics{4, 4}},
+					CaseCount{"1/22/20", statistics{2, 2, 2}},
+					CaseCount{"1/23/20", statistics{3, 3, 3}},
+					CaseCount{"1/24/20", statistics{4, 4, 4}},
 				},
 			},
 		},
@@ -37,9 +37,9 @@ func getTestCacheData() map[string]map[string]CaseCounts {
 			"": CaseCounts{
 				Location{41.1533, 20.1683},
 				[]CaseCount{
-					CaseCount{"1/22/20", statistics{4, 4}},
-					CaseCount{"1/23/20", statistics{5, 5}},
-					CaseCount{"1/24/20", statistics{6, 6}},
+					CaseCount{"1/22/20", statistics{4, 4, 4}},
+					CaseCount{"1/23/20", statistics{5, 5, 5}},
+					CaseCount{"1/24/20", statistics{6, 6, 6}},
 				},
 			},
 		},
@@ -47,9 +47,9 @@ func getTestCacheData() map[string]map[string]CaseCounts {
 			"": CaseCounts{
 				Location{28.0339, 1.6596},
 				[]CaseCount{
-					CaseCount{"1/22/20", statistics{7, 7}},
-					CaseCount{"1/23/20", statistics{8, 8}},
-					CaseCount{"1/24/20", statistics{9, 9}},
+					CaseCount{"1/22/20", statistics{7, 7, 7}},
+					CaseCount{"1/23/20", statistics{8, 8, 8}},
+					CaseCount{"1/24/20", statistics{9, 9, 9}},
 				},
 			},
 		},
@@ -77,19 +77,19 @@ func TestUpdateCaseCounts(t *testing.T) {
 		"Afghanistan": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{33.0, 65.1},
-				statistics{4, 4},
+				statistics{4, 4, 4},
 			},
 		},
 		"Albania": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{41.1533, 20.1683},
-				statistics{6, 6},
+				statistics{6, 6, 6},
 			},
 		},
 		"Algeria": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{28.0339, 1.6596},
-				statistics{9, 9},
+				statistics{9, 9, 9},
 			},
 		},
 	}
@@ -99,15 +99,15 @@ func TestUpdateCaseCounts(t *testing.T) {
 	expectedAllCountryAgg := map[string]CaseCountsAggregated{
 		"Afghanistan": CaseCountsAggregated{
 			Location{33.0, 65.1},
-			statistics{4, 4},
+			statistics{4, 4, 4},
 		},
 		"Albania": CaseCountsAggregated{
 			Location{41.1533, 20.1683},
-			statistics{6, 6},
+			statistics{6, 6, 6},
 		},
 		"Algeria": CaseCountsAggregated{
 			Location{28.0339, 1.6596},
-			statistics{9, 9},
+			statistics{9, 9, 9},
 		},
 	}
 	countryCaseCountsAgg, _ := GetCountryCaseCounts("", "", "")
@@ -125,19 +125,19 @@ func TestGetCounts(t *testing.T) {
 		"Afghanistan": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{33.0, 65.1},
-				statistics{2, 2},
+				statistics{2, 2, 2},
 			},
 		},
 		"Albania": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{41.1533, 20.1683},
-				statistics{2, 2},
+				statistics{2, 2, 2},
 			},
 		},
 		"Algeria": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{28.0339, 1.6596},
-				statistics{2, 2},
+				statistics{2, 2, 2},
 			},
 		},
 	}
@@ -147,15 +147,15 @@ func TestGetCounts(t *testing.T) {
 	expectedAllCountryAgg := map[string]CaseCountsAggregated{
 		"Afghanistan": CaseCountsAggregated{
 			Location{33.0, 65.1},
-			statistics{3, 3},
+			statistics{3, 3, 3},
 		},
 		"Albania": CaseCountsAggregated{
 			Location{41.1533, 20.1683},
-			statistics{5, 5},
+			statistics{5, 5, 5},
 		},
 		"Algeria": CaseCountsAggregated{
 			Location{28.0339, 1.6596},
-			statistics{8, 8},
+			statistics{8, 8, 8},
 		},
 	}
 	countryCaseCountsAgg, _ := GetCountryCaseCounts("1/22/20", "1/23/20", "")
@@ -188,9 +188,9 @@ func TestGetDaysBetweenDates(t *testing.T) {
 
 func TestGetStatisticsSum(t *testing.T) {
 	var input = []CaseCount{
-		CaseCount{"a", statistics{2, 1}},
-		CaseCount{"b", statistics{4, 2}},
-		CaseCount{"c", statistics{7, 5}},
+		CaseCount{"a", statistics{2, 1, 0}},
+		CaseCount{"b", statistics{4, 2, 1}},
+		CaseCount{"c", statistics{7, 5, 3}},
 	}
 
 	tables := []struct {
@@ -198,22 +198,26 @@ func TestGetStatisticsSum(t *testing.T) {
 		toIndex           int
 		expectedComfirmed int
 		expectedDeaths    int
+		expectedRecovered int
 	}{
-		{1, 2, 5, 4},
-		{-1, 2, 7, 5},
-		{1, 3, 5, 4},
-		{-2, -1, 0, 0},
-		{3, 4, 0, 0},
-		{2, 3, 3, 3},
+		{1, 2, 5, 4, 3},
+		{-1, 2, 7, 5, 3},
+		{1, 3, 5, 4, 3},
+		{-2, -1, 0, 0, 0},
+		{3, 4, 0, 0, 0},
+		{2, 3, 3, 3, 2},
 	}
 
 	for _, table := range tables {
-		confirmed, deaths := getStatisticsSum(input, table.fromIndex, table.toIndex)
+		confirmed, deaths, recovered := getStatisticsSum(input, table.fromIndex, table.toIndex)
 		if confirmed != table.expectedComfirmed {
 			t.Errorf("Confirmed was not correct, got: %d, want %d.", confirmed, table.expectedComfirmed)
 		}
 		if deaths != table.expectedDeaths {
 			t.Errorf("Deaths was not 0, got: %d, want %d.", deaths, table.expectedDeaths)
+		}
+		if recovered != table.expectedRecovered {
+			t.Errorf("Deaths was not 0, got: %d, want %d.", recovered, table.expectedRecovered)
 		}
 	}
 }

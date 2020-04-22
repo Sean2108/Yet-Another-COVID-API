@@ -33,8 +33,8 @@ func copyAndFilterCaseCountsMap(countryInfo map[string]CaseCounts, fromIndex int
 func aggregateCaseCountsMap(countryInfo map[string]CaseCounts, fromIndex int, toIndex int) map[string]CaseCountsAggregated {
 	newInfo := make(map[string]CaseCountsAggregated, len(countryInfo))
 	for state, stateInfo := range countryInfo {
-		confirmedSum, deathsSum := getStatisticsSum(stateInfo.Counts, fromIndex, toIndex)
-		newStateInfo := CaseCountsAggregated{stateInfo.Location, statistics{confirmedSum, deathsSum}}
+		confirmedSum, deathsSum, recoveredSum := getStatisticsSum(stateInfo.Counts, fromIndex, toIndex)
+		newStateInfo := CaseCountsAggregated{stateInfo.Location, statistics{confirmedSum, deathsSum, recoveredSum}}
 		newInfo[state] = newStateInfo
 	}
 	return newInfo
@@ -117,6 +117,7 @@ func syncSumStates(country string, countryInfo map[string]CaseCounts, ch chan co
 			for index := range counts {
 				counts[index].Confirmed += stateInfo.Counts[index].Confirmed
 				counts[index].Deaths += stateInfo.Counts[index].Deaths
+				counts[index].Recovered += stateInfo.Counts[index].Recovered
 			}
 		}
 	}
@@ -146,15 +147,17 @@ func syncSumStatesAggregated(country string, countryInfo map[string]CaseCountsAg
 	count := 0
 	confirmed := 0
 	deaths := 0
+	recovered := 0
 	for _, stateInfo := range countryInfo {
 		latSum += stateInfo.Lat
 		longSum += stateInfo.Long
 		count++
 		confirmed += stateInfo.Confirmed
 		deaths += stateInfo.Deaths
+		recovered += stateInfo.Recovered
 	}
 	countF := float32(count)
-	ch <- countryAggMap{country, CaseCountsAggregated{Location{latSum / countF, longSum / countF}, statistics{confirmed, deaths}}}
+	ch <- countryAggMap{country, CaseCountsAggregated{Location{latSum / countF, longSum / countF}, statistics{confirmed, deaths, recovered}}}
 	wg.Done()
 }
 
@@ -185,6 +188,7 @@ func aggregateWorldData(caseCounts map[string]map[string]CaseCounts) []CaseCount
 				for index := range counts {
 					counts[index].Confirmed += stateInfo.Counts[index].Confirmed
 					counts[index].Deaths += stateInfo.Counts[index].Deaths
+					counts[index].Recovered += stateInfo.Counts[index].Recovered
 				}
 			}
 		}

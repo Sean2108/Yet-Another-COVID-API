@@ -29,23 +29,25 @@ func getDaysBetweenDates(startDate time.Time, endDate time.Time) int {
 	return int(endDate.Sub(startDate).Hours() / 24)
 }
 
-func getStatisticsSum(input []CaseCount, fromIndex int, toIndex int) (int, int) {
+func getStatisticsSum(input []CaseCount, fromIndex int, toIndex int) (int, int, int) {
 	confirmedAtStartDate := 0
 	deathsAtStartDate := 0
+	recoveredAtStartDate := 0
 
 	if fromIndex >= len(input) || toIndex < 0 {
-		return 0, 0
+		return 0, 0, 0
 	}
 
 	if fromIndex > 0 {
 		confirmedAtStartDate = input[fromIndex-1].Confirmed
 		deathsAtStartDate = input[fromIndex-1].Deaths
+		recoveredAtStartDate = input[fromIndex-1].Recovered
 	}
 	if toIndex >= len(input) {
 		toIndex = len(input) - 1
 	}
 
-	return input[toIndex].Confirmed - confirmedAtStartDate, input[toIndex].Deaths - deathsAtStartDate
+	return input[toIndex].Confirmed - confirmedAtStartDate, input[toIndex].Deaths - deathsAtStartDate, input[toIndex].Recovered - recoveredAtStartDate
 }
 
 func findClosestMatchToCountryName(country string) string {

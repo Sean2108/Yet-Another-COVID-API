@@ -13,6 +13,7 @@ import (
 const (
 	confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 	deathsURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+	recoveredURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
 )
 
 var (
@@ -39,11 +40,11 @@ func init() {
 // UpdateCaseCounts : Pull data from the John Hopkins CSV files on GitHub, store the result in a cache and also cache the aggregate data for the entire period
 func UpdateCaseCounts() {
 	log.Println("Updating case counts")
-	confirmedData, deathsData := getData()
+	confirmedData, deathsData, recoveredData := getData()
 	headerRow := confirmedData[0]
 	mux.Lock()
 	defer mux.Unlock()
-	caseCountsMap = extractCaseCounts(headerRow, confirmedData, deathsData)
+	caseCountsMap = extractCaseCounts(headerRow, confirmedData, deathsData, recoveredData)
 	setDateBoundariesAndAllAggregatedData(headerRow)
 }
 
