@@ -14,6 +14,9 @@ const (
 	confirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 	deathsURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 	recoveredURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
+
+	usConfirmedURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
+	usDeathsURL    = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 )
 
 var (
@@ -40,11 +43,17 @@ func init() {
 // UpdateCaseCounts : Pull data from the John Hopkins CSV files on GitHub, store the result in a cache and also cache the aggregate data for the entire period
 func UpdateCaseCounts() {
 	log.Println("Updating case counts")
-	confirmedData, deathsData, recoveredData := getData()
+	confirmedData, deathsData, recoveredData := getData(confirmedURL), getData(deathsURL), getData(recoveredURL)
+	usConfirmedData, usDeathsData := getData(usConfirmedURL), getData(usDeathsURL)
+	if len(confirmedData) < 2 || len(confirmedData) != len(deathsData) {
+		log.Fatal("Invalid CSV files obtained")
+	}
 	headerRow := confirmedData[0]
+	baseCaseCountsMap := extractCaseCounts(headerRow, confirmedData, deathsData, recoveredData)
+	usCaseCounts := extractUSCaseCounts(usConfirmedData, usDeathsData)
 	mux.Lock()
 	defer mux.Unlock()
-	caseCountsMap = extractCaseCounts(headerRow, confirmedData, deathsData, recoveredData)
+	caseCountsMap = mergeCaseCountsWithUS(baseCaseCountsMap, usCaseCounts)
 	setDateBoundariesAndAllAggregatedData(headerRow)
 }
 

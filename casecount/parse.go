@@ -47,23 +47,51 @@ func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData 
 	return caseCountsMap
 }
 
-func getData() ([][]string, [][]string, [][]string) {
-	confirmedData, confirmedError := readCSVFromURL(confirmedURL)
-	deathsData, deathsError := readCSVFromURL(deathsURL)
-	recoveredData, recoveredError := readCSVFromURL(recoveredURL)
-	if confirmedError != nil {
-		log.Fatal(confirmedError.Error())
+func mergeCaseCountsWithUS(caseCountsMap map[string]map[string]CaseCounts, usCaseCounts map[string]CaseCounts) map[string]map[string]CaseCounts {
+	usInfo := caseCountsMap["US"]
+	for i := range usInfo[""].Counts {
+		usInfo[""].Counts[i].Confirmed = 0
+		usInfo[""].Counts[i].Deaths = 0
 	}
-	if deathsError != nil {
-		log.Fatal(deathsError.Error())
+	for key, value := range usCaseCounts {
+		usInfo[key] = value
 	}
-	if recoveredError != nil {
-		log.Fatal(recoveredError.Error())
+	return caseCountsMap
+}
+
+func extractUSCaseCounts(confirmedData [][]string, deathsData [][]string) map[string]CaseCounts {
+	headerRow := confirmedData[0]
+	usInfo := make(map[string]CaseCounts)
+	for rowIndex := 1; rowIndex < len(confirmedData); rowIndex++ {
+		confirmedRow := confirmedData[rowIndex]
+		state := confirmedRow[6]
+		if stateInfo, ok := usInfo[state]; ok {
+			counts := getCaseCountsArray(headerRow, confirmedRow, deathsData[rowIndex], nil, 11, 1)
+			for i, count := range counts {
+				stateInfo.Counts[i].Confirmed += count.Confirmed
+				stateInfo.Counts[i].Deaths += count.Deaths
+			}
+		} else {
+			lat, err := strconv.ParseFloat(confirmedRow[8], 32)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			long, err := strconv.ParseFloat(confirmedRow[9], 32)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			usInfo[state] = CaseCounts{Location{float32(lat), float32(long)}, getCaseCountsArray(headerRow, confirmedRow, deathsData[rowIndex], nil, 11, 1)}
+		}
 	}
-	if len(confirmedData) < 2 || len(confirmedData) != len(deathsData) {
-		log.Fatal("Invalid CSV files obtained")
+	return usInfo
+}
+
+func getData(url string) [][]string {
+	data, err := readCSVFromURL(url)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
-	return confirmedData, deathsData, recoveredData
+	return data
 }
 
 func getColumnValue(row []string, colIndex int) int {
@@ -77,11 +105,11 @@ func getColumnValue(row []string, colIndex int) int {
 	return 0
 }
 
-func getCaseCountsArray(headerRow []string, confirmedRow []string, deathsRow []string, recoveredRow []string) []CaseCount {
+func getCaseCountsArray(headerRow []string, confirmedRow []string, deathsRow []string, recoveredRow []string, startIndex int, deathsColOffset int) []CaseCount {
 	var counts []CaseCount
-	for colIndex := 4; colIndex < len(headerRow); colIndex++ {
+	for colIndex := startIndex; colIndex < len(headerRow); colIndex++ {
 		confirmedCount := getColumnValue(confirmedRow, colIndex)
-		deathsCount := getColumnValue(deathsRow, colIndex)
+		deathsCount := getColumnValue(deathsRow, colIndex+deathsColOffset)
 		recoveredCount := getColumnValue(recoveredRow, colIndex)
 		caseCountItem := CaseCount{headerRow[colIndex], statistics{confirmedCount, deathsCount, recoveredCount}}
 		counts = append(counts, caseCountItem)
@@ -91,11 +119,11 @@ func getCaseCountsArray(headerRow []string, confirmedRow []string, deathsRow []s
 
 func getCaseCountsData(headerRow []string, confirmedRow []string, deathsRow []string, recoveredRow []string, rowDetails []string, ch chan extractedInformation, wg *sync.WaitGroup) {
 	// skip faulty entry in data
-	if rowDetails[0] == "Diamond Princess" {
+	if rowDetails[0] == "Diamond Princess" || rowDetails[0] == "Grand Princess" {
 		wg.Done()
 		return
 	}
-	counts := getCaseCountsArray(headerRow, confirmedRow, deathsRow, recoveredRow)
+	counts := getCaseCountsArray(headerRow, confirmedRow, deathsRow, recoveredRow, 4, 0)
 	lat, latError := strconv.ParseFloat(rowDetails[2], 32)
 	if latError != nil {
 		log.Fatal(latError.Error())
