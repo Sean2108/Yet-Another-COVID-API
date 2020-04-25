@@ -1,78 +1,58 @@
 package utils
 
-import "strings"
+import (
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+)
+
+const lookupURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 
 var abbreviationToCountry map[string]string
 var countryToAbbreviation map[string]string
+var statePopulationLookup map[string]map[string]int
+
+var client HTTPClient
 
 func init() {
-	abbreviationToCountry = map[string]string{
-		"ae": "United Arab Emirates",
-		"ar": "Argentina",
-		"at": "Austria",
-		"au": "Australia",
-		"be": "Belgium",
-		"bg": "Bulgaria",
-		"br": "Brazil",
-		"ca": "Canada",
-		"ch": "Switzerland",
-		"cn": "China",
-		"co": "Colombia",
-		"cu": "Cuba",
-		"cz": "Czechia",
-		"de": "Germany",
-		"eg": "Egypt",
-		"fr": "France",
-		"gb": "United Kingdom",
-		"gr": "Greece",
-		"hk": "Hong Kong",
-		"hu": "Hungary",
-		"id": "Indonesia",
-		"ie": "Ireland",
-		"il": "Israel",
-		"in": "India",
-		"it": "Italy",
-		"jp": "Japan",
-		"kr": "Korea, South",
-		"lt": "Lithuania",
-		"lv": "Latvia",
-		"ma": "Morocco",
-		"mx": "Mexico",
-		"my": "Malaysia",
-		"ng": "Nigeria",
-		"nl": "Netherlands",
-		"no": "Norway",
-		"nz": "New Zealand",
-		"ph": "Philippines",
-		"pl": "Poland",
-		"pt": "Portugal",
-		"ro": "Romania",
-		"rs": "Serbia",
-		"ru": "Russia",
-		"sa": "Saudi Arabia",
-		"se": "Sweden",
-		"sg": "Singapore",
-		"si": "Slovenia",
-		"sk": "Slovakia",
-		"th": "Thailand",
-		"tr": "Turkey",
-		"tw": "Taiwan",
-		"ua": "Ukraine",
-		"us": "US",
-		"ve": "Venezuela",
-		"za": "South Africa",
-	}
-	countryToAbbreviation = reverseMap(abbreviationToCountry)
+	client = &http.Client{}
+	getData()
 }
 
-func reverseMap(m map[string]string) map[string]string {
-	reversedMap := make(map[string]string)
-	for k, v := range m {
-		reversedMap[v] = k
+func getData() {
+	abbreviationToCountry = make(map[string]string)
+	countryToAbbreviation = make(map[string]string)
+	statePopulationLookup = make(map[string]map[string]int)
+	data, err := ReadCSVFromURL(client, lookupURL)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
-	return reversedMap
+	parseData(data[1:])
 }
 
+func parseData(data [][]string) {
+	for _, row := range data {
+		iso, state, country, population := strings.ToLower(row[1]), row[6], row[7], row[11]
+		if iso == "" || country == "" {
+			continue
+		}
+		if _, ok := abbreviationToCountry[iso]; !ok {
+			abbreviationToCountry[iso] = country
+			countryToAbbreviation[country] = iso
+		}
+		if _, ok := statePopulationLookup[iso]; !ok {
+			statePopulationLookup[iso] = make(map[string]int)
+		}
+		popInt, err := strconv.Atoi(population)
+		if err == nil {
+			statePopulationLookup[iso][state] = popInt
+		}
+	}
+	log.Println(abbreviationToCountry)
+}
+
+// GetCountryFromAbbreviation : get country name from iso code
 func GetCountryFromAbbreviation(abbr string) (string, bool) {
 	if country, ok := abbreviationToCountry[strings.ToLower(abbr)]; ok {
 		return country, true
@@ -80,6 +60,7 @@ func GetCountryFromAbbreviation(abbr string) (string, bool) {
 	return "", false
 }
 
+// GetAbbreviationFromCountry : get iso code from country name
 func GetAbbreviationFromCountry(country string) (string, bool) {
 	if abbr, ok := countryToAbbreviation[country]; ok {
 		return abbr, true
