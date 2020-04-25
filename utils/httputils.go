@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/csv"
+	"log"
 	"net/http"
 )
 
@@ -10,10 +11,11 @@ type HTTPClient interface {
 	Get(url string) (*http.Response, error)
 }
 
-func ReadCSVFromURL(client HTTPClient, url string) ([][]string, error) {
+func ReadCSVFromURL(client HTTPClient, url string) ([][]string, bool) {
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, err
+		log.Printf("Error was encountered getting the data from %s: %s\n", url, err.Error())
+		return nil, false
 	}
 
 	defer resp.Body.Close()
@@ -21,8 +23,9 @@ func ReadCSVFromURL(client HTTPClient, url string) ([][]string, error) {
 	reader.Comma = ','
 	data, err := reader.ReadAll()
 	if err != nil {
-		return nil, err
+		log.Printf("Error was encountered reading the data from %s: %s\n", url, err.Error())
+		return nil, false
 	}
 
-	return data, nil
+	return data, true
 }

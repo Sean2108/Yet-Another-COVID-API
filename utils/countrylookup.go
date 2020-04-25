@@ -9,9 +9,14 @@ import (
 
 const lookupURL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 
-var abbreviationToCountry map[string]string
-var countryToAbbreviation map[string]string
-var statePopulationLookup map[string]map[string]int
+// AbbreviationToCountry : mapping of abbreviation to country name
+var AbbreviationToCountry map[string]string
+
+// CountryToAbbreviation : mapping of country name to abbreviation
+var CountryToAbbreviation map[string]string
+
+// StatePopulationLookup : mapping of country to state to population
+var StatePopulationLookup map[string]map[string]int
 
 var client HTTPClient
 
@@ -21,43 +26,54 @@ func init() {
 }
 
 func getLookupData() {
-	abbreviationToCountry = make(map[string]string)
-	countryToAbbreviation = make(map[string]string)
-	statePopulationLookup = make(map[string]map[string]int)
-	data, err := ReadCSVFromURL(client, lookupURL)
-	if err != nil {
-		log.Fatal(err.Error())
+	AbbreviationToCountry = make(map[string]string)
+	CountryToAbbreviation = make(map[string]string)
+	StatePopulationLookup = make(map[string]map[string]int)
+	data, ok := ReadCSVFromURL(client, lookupURL)
+	if !ok {
+		log.Fatal("Unable to obtain lookup data, shutting down.")
 	}
-	parseLookupData(data[1:])
+	populateAbbreviationCountryMaps(data[1:])
+	populatePopulationMaps(data[1:])
 }
 
-func parseLookupData(data [][]string) {
+func populateAbbreviationCountryMaps(data [][]string) {
 	for _, row := range data {
-		iso, state, country, population := row[1], row[6], row[7], row[11]
+		iso, state, country := row[1], row[6], row[7]
 		if iso == "" || country == "" {
 			continue
 		}
-		if _, ok := abbreviationToCountry[iso]; !ok && state == "" {
-			abbreviationToCountry[iso] = country
-			countryToAbbreviation[country] = iso
+		if _, ok := AbbreviationToCountry[iso]; !ok && state == "" {
+			AbbreviationToCountry[iso] = country
+			CountryToAbbreviation[country] = iso
 		}
-		if _, ok := statePopulationLookup[iso]; !ok {
-			statePopulationLookup[iso] = make(map[string]int)
+	}
+}
+
+func populatePopulationMaps(data [][]string) {
+	for _, row := range data {
+		state, country, population := row[6], row[7], row[11]
+		if country == "" {
+			continue
+		}
+		iso := CountryToAbbreviation[country]
+		if _, ok := StatePopulationLookup[iso]; !ok {
+			StatePopulationLookup[iso] = make(map[string]int)
 		}
 		popInt, err := strconv.Atoi(population)
 		if err == nil {
-			statePopulationLookup[iso][state] = popInt
+			StatePopulationLookup[iso][state] = popInt
 		}
 	}
 }
 
 // GetCountryFromAbbreviation : get country name from iso code
 func GetCountryFromAbbreviation(abbr string) (string, bool) {
-	if _, ok := countryToAbbreviation[abbr]; ok {
+	if _, ok := CountryToAbbreviation[abbr]; ok {
 		// input is already a country
 		return abbr, true
 	}
-	if country, ok := abbreviationToCountry[strings.ToUpper(abbr)]; ok {
+	if country, ok := AbbreviationToCountry[strings.ToUpper(abbr)]; ok {
 		return country, true
 	}
 	return "", false
@@ -65,11 +81,11 @@ func GetCountryFromAbbreviation(abbr string) (string, bool) {
 
 // GetAbbreviationFromCountry : get iso code from country name
 func GetAbbreviationFromCountry(country string) (string, bool) {
-	if _, ok := abbreviationToCountry[strings.ToUpper(country)]; ok {
+	if _, ok := AbbreviationToCountry[strings.ToUpper(country)]; ok {
 		// input is already an iso
 		return strings.ToUpper(country), true
 	}
-	if abbr, ok := countryToAbbreviation[country]; ok {
+	if abbr, ok := CountryToAbbreviation[country]; ok {
 		return abbr, true
 	}
 	return lowerCaseCountryLookup(country)
@@ -78,7 +94,7 @@ func GetAbbreviationFromCountry(country string) (string, bool) {
 func lowerCaseCountryLookup(country string) (string, bool) {
 	minEditDistance := -1
 	closestMatch := ""
-	for countryKey, iso := range countryToAbbreviation {
+	for countryKey, iso := range CountryToAbbreviation {
 		if strings.ToLower(countryKey) == strings.ToLower(country) {
 			return iso, true
 		}

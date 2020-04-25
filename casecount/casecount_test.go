@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"yet-another-covid-map-api/dateformat"
+	"yet-another-covid-map-api/utils"
 )
 
 type mockClient struct{}
@@ -31,53 +32,65 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 	}, nil
 }
 
-func getTestCacheData() map[string]map[string]CaseCounts {
-	result := map[string]map[string]CaseCounts{
-		"AF": map[string]CaseCounts{
-			"": CaseCounts{
-				Location{33.0, 65.1},
-				[]CaseCount{
-					CaseCount{"1/22/20", statistics{2, 2, 2}},
-					CaseCount{"1/23/20", statistics{3, 3, 3}},
-					CaseCount{"1/24/20", statistics{4, 4, 4}},
+func getTestCacheData() map[string]CountryWithStates {
+	result := map[string]CountryWithStates{
+		"AF": CountryWithStates{
+			Name: "Afghanistan",
+			States: map[string]CaseCounts{
+				"": CaseCounts{
+					LocationAndPopulation{33.0, 65.1, 5000},
+					[]CaseCount{
+						CaseCount{"1/22/20", statistics{2, 2, 2}},
+						CaseCount{"1/23/20", statistics{3, 3, 3}},
+						CaseCount{"1/24/20", statistics{4, 4, 4}},
+					},
 				},
 			},
 		},
-		"AL": map[string]CaseCounts{
-			"": CaseCounts{
-				Location{41.1533, 20.1683},
-				[]CaseCount{
-					CaseCount{"1/22/20", statistics{4, 4, 4}},
-					CaseCount{"1/23/20", statistics{5, 5, 5}},
-					CaseCount{"1/24/20", statistics{6, 6, 6}},
+		"AL": CountryWithStates{
+			Name: "Albania",
+			States: map[string]CaseCounts{
+				"": CaseCounts{
+					LocationAndPopulation{41.1533, 20.1683, 3000},
+					[]CaseCount{
+						CaseCount{"1/22/20", statistics{4, 4, 4}},
+						CaseCount{"1/23/20", statistics{5, 5, 5}},
+						CaseCount{"1/24/20", statistics{6, 6, 6}},
+					},
 				},
 			},
 		},
-		"DZ": map[string]CaseCounts{
-			"": CaseCounts{
-				Location{28.0339, 1.6596},
-				[]CaseCount{
-					CaseCount{"1/22/20", statistics{7, 7, 7}},
-					CaseCount{"1/23/20", statistics{8, 8, 8}},
-					CaseCount{"1/24/20", statistics{9, 9, 9}},
+		"DZ": CountryWithStates{
+			Name: "Algeria",
+			States: map[string]CaseCounts{
+				"": CaseCounts{
+					LocationAndPopulation{28.0339, 1.6596, 6000},
+					[]CaseCount{
+						CaseCount{"1/22/20", statistics{7, 7, 7}},
+						CaseCount{"1/23/20", statistics{8, 8, 8}},
+						CaseCount{"1/24/20", statistics{9, 9, 9}},
+					},
 				},
 			},
 		},
-		"US": map[string]CaseCounts{
-			"": CaseCounts{
-				Location{37.0902, -95.7129},
-				[]CaseCount{
-					CaseCount{"1/22/20", statistics{0, 0, 10}},
-					CaseCount{"1/23/20", statistics{0, 0, 11}},
-					CaseCount{"1/24/20", statistics{0, 0, 12}},
+		"US": CountryWithStates{
+			Name: "US",
+			States: map[string]CaseCounts{
+				"": CaseCounts{
+					LocationAndPopulation{37.0902, -95.7129, 300000},
+					[]CaseCount{
+						CaseCount{"1/22/20", statistics{0, 0, 10}},
+						CaseCount{"1/23/20", statistics{0, 0, 11}},
+						CaseCount{"1/24/20", statistics{0, 0, 12}},
+					},
 				},
-			},
-			"American Samoa": CaseCounts{
-				Location{-14.270999999999999, -170.132},
-				[]CaseCount{
-					CaseCount{"1/22/20", statistics{4, 1, 0}},
-					CaseCount{"1/23/20", statistics{5, 2, 0}},
-					CaseCount{"1/24/20", statistics{6, 3, 0}},
+				"American Samoa": CaseCounts{
+					LocationAndPopulation{-14.270999999999999, -170.132, 40000},
+					[]CaseCount{
+						CaseCount{"1/22/20", statistics{4, 1, 0}},
+						CaseCount{"1/23/20", statistics{5, 2, 0}},
+						CaseCount{"1/24/20", statistics{6, 3, 0}},
+					},
 				},
 			},
 		},
@@ -85,9 +98,43 @@ func getTestCacheData() map[string]map[string]CaseCounts {
 	return result
 }
 
-func TestUpdateCaseCounts(t *testing.T) {
+func setupTest() {
 	client = &mockClient{}
 	clientGetCallCounter = 0
+	utils.AbbreviationToCountry = map[string]string{
+		"AF": "Afghanistan",
+		"AL": "Albania",
+		"DZ": "Algeria",
+		"US": "US",
+	}
+	utils.CountryToAbbreviation = map[string]string{
+		"Afghanistan": "AF",
+		"Albania":     "AL",
+		"Algeria":     "DZ",
+		"US":          "US",
+	}
+	utils.StatePopulationLookup = map[string]map[string]int{
+		"AF": map[string]int{
+			"": 5000,
+		},
+		"AL": map[string]int{
+			"": 3000,
+		},
+		"DZ": map[string]int{
+			"": 6000,
+		},
+		"US": map[string]int{
+			"":               300000,
+			"American Samoa": 40000,
+		},
+	}
+}
+
+func TestMain(m *testing.M) {
+	setupTest()
+}
+
+func TestUpdateCaseCounts(t *testing.T) {
 	UpdateCaseCounts()
 	if firstDate.Format(dateformat.CasesDateFormat) != "1/22/20" {
 		t.Errorf("Value of firstDate is incorrect, got: %s, want %s.", firstDate, "1/22/20")
@@ -102,55 +149,79 @@ func TestUpdateCaseCounts(t *testing.T) {
 	}
 	verifyResultsCaseCountsMap(caseCountsMap, expectedCaseCounts, t)
 
-	expectedAllAgg := map[string]map[string]CaseCountsAggregated{
-		"AF": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{33.0, 65.1},
-				statistics{4, 4, 4},
+	expectedAllAgg := map[string]CountryWithStatesAggregated{
+		"AF": CountryWithStatesAggregated{
+			Name: "Afghanistan",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{33.0, 65.1, 5000},
+					statistics{4, 4, 4},
+				},
 			},
 		},
-		"AL": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{41.1533, 20.1683},
-				statistics{6, 6, 6},
+		"AL": CountryWithStatesAggregated{
+			Name: "Albania",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{41.1533, 20.1683, 3000},
+					statistics{6, 6, 6},
+				},
 			},
 		},
-		"DZ": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{28.0339, 1.6596},
-				statistics{9, 9, 9},
+		"DZ": CountryWithStatesAggregated{
+			Name: "Algeria",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{28.0339, 1.6596, 6000},
+					statistics{9, 9, 9},
+				},
 			},
 		},
-		"US": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{37.0902, -95.7129},
-				statistics{0, 0, 12},
-			},
-			"American Samoa": CaseCountsAggregated{
-				Location{-14.270999999999999, -170.132},
-				statistics{6, 3, 0},
+		"US": CountryWithStatesAggregated{
+			Name: "US",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{37.0902, -95.7129, 300000},
+					statistics{0, 0, 12},
+				},
+				"American Samoa": CaseCountsAggregated{
+					LocationAndPopulation{-14.270999999999999, -170.132, 40000},
+					statistics{6, 3, 0},
+				},
 			},
 		},
 	}
 	caseCountsAgg, _ := GetCaseCounts("", "", "")
 	verifyResultsCaseCountsAgg(caseCountsAgg, expectedAllAgg, t)
 
-	expectedAllCountryAgg := map[string]CaseCountsAggregated{
-		"AF": CaseCountsAggregated{
-			Location{33.0, 65.1},
-			statistics{4, 4, 4},
+	expectedAllCountryAgg := map[string]CountryAggregated{
+		"AF": CountryAggregated{
+			"Afghanistan",
+			CaseCountsAggregated{
+				LocationAndPopulation{33.0, 65.1, 5000},
+				statistics{4, 4, 4},
+			},
 		},
-		"AL": CaseCountsAggregated{
-			Location{41.1533, 20.1683},
-			statistics{6, 6, 6},
+		"AL": CountryAggregated{
+			"Albania",
+			CaseCountsAggregated{
+				LocationAndPopulation{41.1533, 20.1683, 3000},
+				statistics{6, 6, 6},
+			},
 		},
-		"DZ": CaseCountsAggregated{
-			Location{28.0339, 1.6596},
-			statistics{9, 9, 9},
+		"DZ": CountryAggregated{
+			"Algeria",
+			CaseCountsAggregated{
+				LocationAndPopulation{28.0339, 1.6596, 6000},
+				statistics{9, 9, 9},
+			},
 		},
-		"US": CaseCountsAggregated{
-			Location{(-14.270999999999999 + 37.0902) / 2.0, (-95.7129 - 170.132) / 2},
-			statistics{6, 3, 12},
+		"US": CountryAggregated{
+			"US",
+			CaseCountsAggregated{
+				LocationAndPopulation{37.0902, -95.7129, 340000},
+				statistics{6, 3, 12},
+			},
 		},
 	}
 	countryCaseCountsAgg, _ := GetCountryCaseCounts("", "", "")
@@ -162,58 +233,81 @@ func TestUpdateCaseCounts(t *testing.T) {
 }
 
 func TestGetCounts(t *testing.T) {
-	client = &mockClient{}
-	clientGetCallCounter = 0
 	UpdateCaseCounts()
-	expectedQueryAgg := map[string]map[string]CaseCountsAggregated{
-		"AF": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{33.0, 65.1},
-				statistics{2, 2, 2},
+
+	expectedQueryAgg := map[string]CountryWithStatesAggregated{
+		"AF": CountryWithStatesAggregated{
+			Name: "Afghanistan",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{33.0, 65.1, 5000},
+					statistics{2, 2, 2},
+				},
 			},
 		},
-		"AL": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{41.1533, 20.1683},
-				statistics{2, 2, 2},
+		"AL": CountryWithStatesAggregated{
+			Name: "Albania",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{41.1533, 20.1683, 3000},
+					statistics{2, 2, 2},
+				},
 			},
 		},
-		"DZ": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{28.0339, 1.6596},
-				statistics{2, 2, 2},
+		"DZ": CountryWithStatesAggregated{
+			Name: "Algeria",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{28.0339, 1.6596, 6000},
+					statistics{2, 2, 2},
+				},
 			},
 		},
-		"US": map[string]CaseCountsAggregated{
-			"": CaseCountsAggregated{
-				Location{37.0902, -95.7129},
-				statistics{0, 0, 2},
-			},
-			"American Samoa": CaseCountsAggregated{
-				Location{-14.270999999999999, -170.132},
-				statistics{2, 2, 0},
+		"US": CountryWithStatesAggregated{
+			Name: "US",
+			States: map[string]CaseCountsAggregated{
+				"": CaseCountsAggregated{
+					LocationAndPopulation{37.0902, -95.7129, 300000},
+					statistics{0, 0, 2},
+				},
+				"American Samoa": CaseCountsAggregated{
+					LocationAndPopulation{-14.270999999999999, -170.132, 40000},
+					statistics{2, 2, 0},
+				},
 			},
 		},
 	}
 	caseCountsAgg, _ := GetCaseCounts("1/23/20", "1/24/20", "")
 	verifyResultsCaseCountsAgg(caseCountsAgg, expectedQueryAgg, t)
 
-	expectedQueryCountryAgg := map[string]CaseCountsAggregated{
-		"AF": CaseCountsAggregated{
-			Location{33.0, 65.1},
-			statistics{3, 3, 3},
+	expectedQueryCountryAgg := map[string]CountryAggregated{
+		"AF": CountryAggregated{
+			"Afghanistan",
+			CaseCountsAggregated{
+				LocationAndPopulation{33.0, 65.1, 5000},
+				statistics{3, 3, 3},
+			},
 		},
-		"AL": CaseCountsAggregated{
-			Location{41.1533, 20.1683},
-			statistics{5, 5, 5},
+		"AL": CountryAggregated{
+			"Albania",
+			CaseCountsAggregated{
+				LocationAndPopulation{41.1533, 20.1683, 3000},
+				statistics{5, 5, 5},
+			},
 		},
-		"DZ": CaseCountsAggregated{
-			Location{28.0339, 1.6596},
-			statistics{8, 8, 8},
+		"DZ": CountryAggregated{
+			"Algeria",
+			CaseCountsAggregated{
+				LocationAndPopulation{28.0339, 1.6596, 6000},
+				statistics{8, 8, 8},
+			},
 		},
-		"US": CaseCountsAggregated{
-			Location{(-14.270999999999999 + 37.0902) / 2.0, (-95.7129 - 170.132) / 2.0},
-			statistics{5, 2, 11},
+		"US": CountryAggregated{
+			"US",
+			CaseCountsAggregated{
+				LocationAndPopulation{37.0902, -95.7129, 340000},
+				statistics{5, 2, 11},
+			},
 		},
 	}
 	countryCaseCountsAgg, _ := GetCountryCaseCounts("1/22/20", "1/23/20", "")

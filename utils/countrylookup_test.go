@@ -70,3 +70,24 @@ func TestGetAbbreviationFromCountry(t *testing.T) {
 		}
 	}
 }
+
+func TestGetPopulation(t *testing.T) {
+	client = &mockClient{}
+	getLookupData()
+
+	tables := []struct {
+		country    string
+		state      string
+		population int
+	}{
+		{"AF", "", 38928341},
+		{"AL", "", 2877800},
+		{"DZ", "", 43851043},
+	}
+	for _, table := range tables {
+		population := StatePopulationLookup[table.country][table.state]
+		if table.population != population {
+			t.Errorf("population is incorrect, got: %d, want: %d.", population, table.population)
+		}
+	}
+}

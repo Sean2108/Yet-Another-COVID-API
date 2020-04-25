@@ -13,8 +13,8 @@ type extractedInformation struct {
 	counts  CaseCounts
 }
 
-func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string, recoveredData [][]string) map[string]map[string]CaseCounts {
-	caseCountsMap := make(map[string]map[string]CaseCounts)
+func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData [][]string, recoveredData [][]string) map[string]CountryWithStates {
+	caseCountsMap := make(map[string]CountryWithStates)
 	numRows := len(confirmedData)
 	ch := make(chan extractedInformation, numRows-1)
 	recoveredCh := make(chan extractedInformation, len(recoveredData)-1)
@@ -32,30 +32,32 @@ func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData 
 	close(recoveredCh)
 	for item := range ch {
 		if _, ok := caseCountsMap[item.country]; !ok {
-			caseCountsMap[item.country] = make(map[string]CaseCounts)
+			countryName, _ := utils.GetCountryFromAbbreviation(item.country)
+			countryInfo := CountryWithStates{countryName, map[string]CaseCounts{}}
+			caseCountsMap[item.country] = countryInfo
 		}
-		caseCountsMap[item.country][item.state] = item.counts
+		caseCountsMap[item.country].States[item.state] = item.counts
 	}
 	for item := range recoveredCh {
-		if state, ok := caseCountsMap[item.country][item.state]; ok {
+		if state, ok := caseCountsMap[item.country].States[item.state]; ok {
 			for i, count := range item.counts.Counts {
 				state.Counts[i].Recovered = count.Recovered
 			}
 		} else {
-			caseCountsMap[item.country][item.state] = item.counts
+			caseCountsMap[item.country].States[item.state] = item.counts
 		}
 	}
 	return caseCountsMap
 }
 
-func mergeCaseCountsWithUS(caseCountsMap map[string]map[string]CaseCounts, usCaseCounts map[string]CaseCounts) map[string]map[string]CaseCounts {
+func mergeCaseCountsWithUS(caseCountsMap map[string]CountryWithStates, usCaseCounts map[string]CaseCounts) map[string]CountryWithStates {
 	usInfo := caseCountsMap["US"]
-	for i := range usInfo[""].Counts {
-		usInfo[""].Counts[i].Confirmed = 0
-		usInfo[""].Counts[i].Deaths = 0
+	for i := range usInfo.States[""].Counts {
+		usInfo.States[""].Counts[i].Confirmed = 0
+		usInfo.States[""].Counts[i].Deaths = 0
 	}
 	for key, value := range usCaseCounts {
-		usInfo[key] = value
+		usInfo.States[key] = value
 	}
 	return caseCountsMap
 }
@@ -83,19 +85,21 @@ func extractUSCaseCounts(confirmedData [][]string, deathsData [][]string) map[st
 				log.Fatal(err.Error())
 			}
 			if counts, ok := getCaseCountsArray(headerRow, confirmedRow, deathsData[rowIndex], nil, 11, 1); ok {
-				usInfo[state] = CaseCounts{Location{float32(lat), float32(long)}, counts}
+				usInfo[state] = CaseCounts{LocationAndPopulation{float32(lat), float32(long), utils.StatePopulationLookup["US"][state]}, counts}
 			}
 		}
 	}
 	return usInfo
 }
 
-func getData(url string) [][]string {
-	data, err := utils.ReadCSVFromURL(client, url)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	return data
+func getData() ([][]string, [][]string, [][]string, [][]string, [][]string, bool) {
+	confirmedData, confirmedOk := utils.ReadCSVFromURL(client, confirmedURL)
+	deathsData, deathsOk := utils.ReadCSVFromURL(client, deathsURL)
+	recoveredData, recoveredOk := utils.ReadCSVFromURL(client, recoveredURL)
+	usConfirmedData, usConfirmedOk := utils.ReadCSVFromURL(client, usConfirmedURL)
+	usDeathsData, usDeathsOk := utils.ReadCSVFromURL(client, usDeathsURL)
+	return confirmedData, deathsData, recoveredData, usConfirmedData, usDeathsData,
+		confirmedOk && deathsOk && recoveredOk && usConfirmedOk && usDeathsOk
 }
 
 func getColumnValue(row []string, colIndex int) (int, bool) {
@@ -142,6 +146,5 @@ func getCaseCountsData(headerRow []string, confirmedRow []string, deathsRow []st
 	if longError != nil {
 		log.Fatal(longError.Error())
 	}
-
-	ch <- extractedInformation{rowDetails[0], iso, CaseCounts{Location{float32(lat), float32(long)}, counts}}
+	ch <- extractedInformation{rowDetails[0], iso, CaseCounts{LocationAndPopulation{float32(lat), float32(long), utils.StatePopulationLookup[iso][rowDetails[0]]}, counts}}
 }
