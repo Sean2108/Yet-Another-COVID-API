@@ -33,7 +33,7 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 
 func getTestCacheData() map[string]map[string]CaseCounts {
 	result := map[string]map[string]CaseCounts{
-		"Afghanistan": map[string]CaseCounts{
+		"AF": map[string]CaseCounts{
 			"": CaseCounts{
 				Location{33.0, 65.1},
 				[]CaseCount{
@@ -43,7 +43,7 @@ func getTestCacheData() map[string]map[string]CaseCounts {
 				},
 			},
 		},
-		"Albania": map[string]CaseCounts{
+		"AL": map[string]CaseCounts{
 			"": CaseCounts{
 				Location{41.1533, 20.1683},
 				[]CaseCount{
@@ -53,7 +53,7 @@ func getTestCacheData() map[string]map[string]CaseCounts {
 				},
 			},
 		},
-		"Algeria": map[string]CaseCounts{
+		"DZ": map[string]CaseCounts{
 			"": CaseCounts{
 				Location{28.0339, 1.6596},
 				[]CaseCount{
@@ -103,19 +103,19 @@ func TestUpdateCaseCounts(t *testing.T) {
 	verifyResultsCaseCountsMap(caseCountsMap, expectedCaseCounts, t)
 
 	expectedAllAgg := map[string]map[string]CaseCountsAggregated{
-		"Afghanistan": map[string]CaseCountsAggregated{
+		"AF": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{33.0, 65.1},
 				statistics{4, 4, 4},
 			},
 		},
-		"Albania": map[string]CaseCountsAggregated{
+		"AL": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{41.1533, 20.1683},
 				statistics{6, 6, 6},
 			},
 		},
-		"Algeria": map[string]CaseCountsAggregated{
+		"DZ": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{28.0339, 1.6596},
 				statistics{9, 9, 9},
@@ -136,15 +136,15 @@ func TestUpdateCaseCounts(t *testing.T) {
 	verifyResultsCaseCountsAgg(caseCountsAgg, expectedAllAgg, t)
 
 	expectedAllCountryAgg := map[string]CaseCountsAggregated{
-		"Afghanistan": CaseCountsAggregated{
+		"AF": CaseCountsAggregated{
 			Location{33.0, 65.1},
 			statistics{4, 4, 4},
 		},
-		"Albania": CaseCountsAggregated{
+		"AL": CaseCountsAggregated{
 			Location{41.1533, 20.1683},
 			statistics{6, 6, 6},
 		},
-		"Algeria": CaseCountsAggregated{
+		"DZ": CaseCountsAggregated{
 			Location{28.0339, 1.6596},
 			statistics{9, 9, 9},
 		},
@@ -166,19 +166,19 @@ func TestGetCounts(t *testing.T) {
 	clientGetCallCounter = 0
 	UpdateCaseCounts()
 	expectedQueryAgg := map[string]map[string]CaseCountsAggregated{
-		"Afghanistan": map[string]CaseCountsAggregated{
+		"AF": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{33.0, 65.1},
 				statistics{2, 2, 2},
 			},
 		},
-		"Albania": map[string]CaseCountsAggregated{
+		"AL": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{41.1533, 20.1683},
 				statistics{2, 2, 2},
 			},
 		},
-		"Algeria": map[string]CaseCountsAggregated{
+		"DZ": map[string]CaseCountsAggregated{
 			"": CaseCountsAggregated{
 				Location{28.0339, 1.6596},
 				statistics{2, 2, 2},
@@ -199,15 +199,15 @@ func TestGetCounts(t *testing.T) {
 	verifyResultsCaseCountsAgg(caseCountsAgg, expectedQueryAgg, t)
 
 	expectedQueryCountryAgg := map[string]CaseCountsAggregated{
-		"Afghanistan": CaseCountsAggregated{
+		"AF": CaseCountsAggregated{
 			Location{33.0, 65.1},
 			statistics{3, 3, 3},
 		},
-		"Albania": CaseCountsAggregated{
+		"AL": CaseCountsAggregated{
 			Location{41.1533, 20.1683},
 			statistics{5, 5, 5},
 		},
-		"Algeria": CaseCountsAggregated{
+		"DZ": CaseCountsAggregated{
 			Location{28.0339, 1.6596},
 			statistics{8, 8, 8},
 		},

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"yet-another-covid-map-api/dateformat"
-	"yet-another-covid-map-api/utils"
 )
 
 func getDaysBetweenDates(startDate time.Time, endDate time.Time) int {
@@ -30,18 +29,6 @@ func getStatisticsSum(input []CaseCount, fromIndex int, toIndex int) (int, int, 
 	}
 
 	return input[toIndex].Confirmed - confirmedAtStartDate, input[toIndex].Deaths - deathsAtStartDate, input[toIndex].Recovered - recoveredAtStartDate
-}
-
-func findClosestMatchToCountryName(country string) string {
-	minEditDistance := -1
-	closestMatch := ""
-	for countryKey := range countryAggregatedMap {
-		if editDistance := utils.EditDistance([]rune(country), []rune(countryKey)); minEditDistance == -1 || editDistance < minEditDistance {
-			minEditDistance = editDistance
-			closestMatch = countryKey
-		}
-	}
-	return closestMatch
 }
 
 func getFromAndToIndices(from string, to string) (int, int) {

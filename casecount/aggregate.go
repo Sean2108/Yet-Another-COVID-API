@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"yet-another-covid-map-api/utils"
 )
 
 type aggregatedCaseCountsMap struct {
@@ -53,19 +54,17 @@ func filterCaseCounts(from string, to string, country string) (map[string]map[st
 		}
 	}
 	for countryKey, countryInfo := range caseCountsMap {
-		if country == "" || strings.ToLower(country) == strings.ToLower(countryKey) {
+		countryName, _ := utils.GetCountryFromAbbreviation(countryKey)
+		if country == "" || strings.ToLower(country) == strings.ToLower(countryName) {
 			filteredCaseCounts[countryKey] = copyAndFilterCaseCountsMap(countryInfo, fromIndex, toIndex)
 		}
 	}
-	var err error
-	if country != "" && len(filteredCaseCounts) == 0 {
-		err = fmt.Errorf("Country %s not found, did you mean: %s?", country, findClosestMatchToCountryName(country))
-	}
-	return filteredCaseCounts, err
+	return filteredCaseCounts, nil
 }
 
 func syncAggregateCaseCountsMap(countryKey string, countryInfo map[string]CaseCounts, fromIndex int, toIndex int, country string, ch chan aggregatedCaseCountsMap, wg *sync.WaitGroup) {
-	if country == "" || strings.ToLower(countryKey) == strings.ToLower(country) {
+	countryName, _ := utils.GetCountryFromAbbreviation(countryKey)
+	if country == "" || strings.ToLower(countryName) == strings.ToLower(country) {
 		info := aggregateCaseCountsMap(countryInfo, fromIndex, toIndex)
 		ch <- aggregatedCaseCountsMap{countryKey, info}
 	}
@@ -95,11 +94,7 @@ func aggregateDataBetweenDates(from string, to string, country string) (map[stri
 	for caseCountsAgg := range ch {
 		aggregatedData[caseCountsAgg.country] = caseCountsAgg.info
 	}
-	var err error
-	if country != "" && len(aggregatedData) == 0 {
-		err = fmt.Errorf("Country %s not found, did you mean: %s?", country, findClosestMatchToCountryName(country))
-	}
-	return aggregatedData, err
+	return aggregatedData, nil
 }
 
 func syncSumStates(country string, countryInfo map[string]CaseCounts, ch chan countryMap, wg *sync.WaitGroup) {

@@ -37,53 +37,56 @@ func callTestFn(from string, to string, country string, aggregateCountries bool,
 func TestParseUrlQuery(t *testing.T) {
 	tables := []struct {
 		rawurl             string
-		getAbbreviation    bool
 		from               string
 		to                 string
 		country            string
 		aggregateCountries bool
 		perDay             bool
 		worldTotal         bool
+		errorString        string
 	}{
-		{"http://localhost:8080/cases", false, "", "", "", false, false, false},
-		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false, false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20", false, "1/1/20", "1/2/20", "", false, false, false},
-		{"http://localhost:8080/cases?from=&to=1/1/20", false, "", "1/1/20", "", false, false, false},
-		{"http://localhost:8080/cases?from=&to=&country=CN", false, "", "", "China", false, false, false},
-		{"http://localhost:8080/cases?from=&to=&country=gb", false, "", "", "United Kingdom", false, false, false},
-		{"http://localhost:8080/cases?country=United Kingdom", false, "", "", "United Kingdom", false, false, false},
-		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", false, "", "", "Singapore", true, false, false},
-		{"http://localhost:8080/cases?aggregatecountries=true&country=sg", false, "", "", "Singapore", true, false, false},
-		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", true, "", "", "sg", false, false, false},
-		{"http://localhost:8080/cases?aggregateCountries=tru&country=Sngapore", true, "", "", "Sngapore", false, false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true&perDay=false", false, "1/1/20", "1/2/20", "Singapore", true, false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=false&perDay=true", false, "1/1/20", "1/2/20", "Singapore", false, true, false},
-		{"http://localhost:8080/cases?from=1/32/20&to=1/2/20&country=Singapore&aggregateCountries=true", false, "", "", "", false, false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/32/20&country=Singapore&aggregateCountries=true", false, "", "", "", false, false, false},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/30/20&worldTotal=true", false, "1/1/20", "1/30/20", "", false, false, true},
-		{"http://localhost:8080/cases?from=1/1/20&to=1/30/20&worldTotal=false", false, "1/1/20", "1/30/20", "", false, false, false},
+		{"http://localhost:8080/cases", "", "", "", false, false, false, ""},
+		{"http://localhost:8080/cases?from=&to=1/1/20", "", "1/1/20", "", false, false, false, ""},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20", "1/1/20", "1/2/20", "", false, false, false, ""},
+		{"http://localhost:8080/cases?from=&to=1/1/20", "", "1/1/20", "", false, false, false, ""},
+		{"http://localhost:8080/cases?from=&to=&country=CN", "", "", "CN", false, false, false, ""},
+		{"http://localhost:8080/cases?from=&to=&country=gb", "", "", "GB", false, false, false, ""},
+		{"http://localhost:8080/cases?country=United Kingdom", "", "", "GB", false, false, false, ""},
+		{"http://localhost:8080/cases?aggregateCountries=true&country=sg", "", "", "SG", true, false, false, ""},
+		{"http://localhost:8080/cases?aggregatecountries=true&country=sg", "", "", "SG", true, false, false, ""},
+		{"http://localhost:8080/cases?aggregateCountries=tru&country=Singapore", "", "", "SG", false, false, false, ""},
+		{"http://localhost:8080/cases?aggregateCountries=tru&country=Sngapore", "", "", "", false, false, false, "Singapore"},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=true&perDay=false", "1/1/20", "1/2/20", "SG", true, false, false, ""},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/2/20&country=Singapore&aggregateCountries=false&perDay=true", "1/1/20", "1/2/20", "SG", false, true, false, ""},
+		{"http://localhost:8080/cases?from=1/32/20&to=1/2/20&country=Singapore&aggregateCountries=true", "", "", "", false, false, false, "Date format"},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/32/20&country=Singapore&aggregateCountries=true", "", "", "", false, false, false, "Date format"},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/30/20&worldTotal=true", "1/1/20", "1/30/20", "", false, false, true, ""},
+		{"http://localhost:8080/cases?from=1/1/20&to=1/30/20&worldTotal=false", "1/1/20", "1/30/20", "", false, false, false, ""},
 	}
 
 	for _, table := range tables {
 		url, _ := url.Parse(table.rawurl)
-		from, to, country, aggregateCountries, perDay, worldTotal, _ := parseURL(url, table.getAbbreviation, dateformat.CasesDateFormat)
+		from, to, country, aggregateCountries, perDay, worldTotal, err := parseURL(url, dateformat.CasesDateFormat)
 		if from != table.from {
-			t.Errorf("result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, from, table.from)
+			t.Errorf("from result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, from, table.from)
 		}
 		if to != table.to {
-			t.Errorf("result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, to, table.to)
+			t.Errorf("to result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, to, table.to)
 		}
 		if country != table.country {
-			t.Errorf("result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, country, table.country)
+			t.Errorf("country result of parseURL was incorrect for %s, got: %s, want: %s.", table.rawurl, country, table.country)
 		}
 		if aggregateCountries != table.aggregateCountries {
-			t.Errorf("result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, aggregateCountries, table.aggregateCountries)
+			t.Errorf("aggregateCountries result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, aggregateCountries, table.aggregateCountries)
 		}
 		if perDay != table.perDay {
-			t.Errorf("result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, perDay, table.perDay)
+			t.Errorf("perDay result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, perDay, table.perDay)
 		}
 		if worldTotal != table.worldTotal {
-			t.Errorf("result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, worldTotal, table.worldTotal)
+			t.Errorf("worldTotal result of parseURL was incorrect for %s, got: %t, want: %t.", table.rawurl, worldTotal, table.worldTotal)
+		}
+		if table.errorString != "" && !strings.Contains(err.Error(), table.errorString) {
+			t.Errorf("error thrown for parseURL was incorrect for %s, got: %s, want error containing: %s.", table.rawurl, err.Error(), table.errorString)
 		}
 	}
 }
@@ -94,34 +97,27 @@ func TestGetCaseCountsResponse_PerDay(t *testing.T) {
 		country            string
 		aggregateCountries bool
 		perDay             bool
-		expectedSuccess    bool
 	}{
-		{"", false, true, true},
-		{"Ssingapore", false, true, false},
-		{"", true, false, true},
-		{"Ssingapore", true, false, false},
-		{"", false, false, true},
-		{"", true, true, true},
-		{"Ssingapore", false, false, false},
+		{"", false, true},
+		{"SG", false, true},
+		{"", true, false},
+		{"SG", true, false},
+		{"", false, false},
+		{"", true, true},
+		{"SG", false, false},
 	}
 
 	for _, table := range tables {
 		casecount.UpdateCaseCounts()
 		response, err, caseCountErr := getCaseCountsResponse("", "", table.country, table.aggregateCountries, table.perDay, false)
-		if table.expectedSuccess {
-			if len(response) < 3 {
-				t.Errorf("Response should not be empty, got length: %d, want length: %s.", len(response), "more than 2")
-			}
-			if err != nil {
-				t.Errorf("Err should be null, got: %s, want: nil.", err.Error())
-			}
-			if caseCountErr != nil {
-				t.Errorf("caseCountErr should be null, got: %s, want: nil.", caseCountErr.Error())
-			}
-		} else {
-			if caseCountErr == nil || !strings.Contains(caseCountErr.Error(), "Singapore") {
-				t.Errorf("caseCountErr is incorrect, got: %s.", caseCountErr.Error())
-			}
+		if len(response) < 3 {
+			t.Errorf("Response should not be empty, got length: %d, want length: %s.", len(response), "more than 2")
+		}
+		if err != nil {
+			t.Errorf("Err should be null, got: %s, want: nil.", err.Error())
+		}
+		if caseCountErr != nil {
+			t.Errorf("caseCountErr should be null, got: %s, want: nil.", caseCountErr.Error())
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package utils
 
 // EditDistance: return the degree of similarity between 2 strings
-func EditDistance(str1, str2 []rune) int {
+func editDistance(str1, str2 []rune) int {
 	s1len := len(str1)
 	s2len := len(str2)
 	column := make([]int, len(str1)+1)

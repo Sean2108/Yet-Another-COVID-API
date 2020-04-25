@@ -130,7 +130,8 @@ func getCaseCountsArray(headerRow []string, confirmedRow []string, deathsRow []s
 func getCaseCountsData(headerRow []string, confirmedRow []string, deathsRow []string, recoveredRow []string, rowDetails []string, ch chan extractedInformation, wg *sync.WaitGroup) {
 	defer wg.Done()
 	counts, ok := getCaseCountsArray(headerRow, confirmedRow, deathsRow, recoveredRow, 4, 0)
-	if !ok {
+	iso, lookupOk := utils.GetAbbreviationFromCountry(rowDetails[1])
+	if !ok || !lookupOk {
 		return
 	}
 	lat, latError := strconv.ParseFloat(rowDetails[2], 32)
@@ -141,5 +142,6 @@ func getCaseCountsData(headerRow []string, confirmedRow []string, deathsRow []st
 	if longError != nil {
 		log.Fatal(longError.Error())
 	}
-	ch <- extractedInformation{rowDetails[0], rowDetails[1], CaseCounts{Location{float32(lat), float32(long)}, counts}}
+
+	ch <- extractedInformation{rowDetails[0], iso, CaseCounts{Location{float32(lat), float32(long)}, counts}}
 }

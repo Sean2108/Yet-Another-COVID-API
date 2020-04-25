@@ -17,10 +17,10 @@ var client HTTPClient
 
 func init() {
 	client = &http.Client{}
-	getData()
+	getLookupData()
 }
 
-func getData() {
+func getLookupData() {
 	abbreviationToCountry = make(map[string]string)
 	countryToAbbreviation = make(map[string]string)
 	statePopulationLookup = make(map[string]map[string]int)
@@ -28,16 +28,16 @@ func getData() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	parseData(data[1:])
+	parseLookupData(data[1:])
 }
 
-func parseData(data [][]string) {
+func parseLookupData(data [][]string) {
 	for _, row := range data {
-		iso, state, country, population := strings.ToLower(row[1]), row[6], row[7], row[11]
+		iso, state, country, population := row[1], row[6], row[7], row[11]
 		if iso == "" || country == "" {
 			continue
 		}
-		if _, ok := abbreviationToCountry[iso]; !ok {
+		if _, ok := abbreviationToCountry[iso]; !ok && state == "" {
 			abbreviationToCountry[iso] = country
 			countryToAbbreviation[country] = iso
 		}
@@ -49,12 +49,15 @@ func parseData(data [][]string) {
 			statePopulationLookup[iso][state] = popInt
 		}
 	}
-	log.Println(abbreviationToCountry)
 }
 
 // GetCountryFromAbbreviation : get country name from iso code
 func GetCountryFromAbbreviation(abbr string) (string, bool) {
-	if country, ok := abbreviationToCountry[strings.ToLower(abbr)]; ok {
+	if _, ok := countryToAbbreviation[abbr]; ok {
+		// input is already a country
+		return abbr, true
+	}
+	if country, ok := abbreviationToCountry[strings.ToUpper(abbr)]; ok {
 		return country, true
 	}
 	return "", false
@@ -62,8 +65,27 @@ func GetCountryFromAbbreviation(abbr string) (string, bool) {
 
 // GetAbbreviationFromCountry : get iso code from country name
 func GetAbbreviationFromCountry(country string) (string, bool) {
+	if _, ok := abbreviationToCountry[strings.ToUpper(country)]; ok {
+		// input is already an iso
+		return strings.ToUpper(country), true
+	}
 	if abbr, ok := countryToAbbreviation[country]; ok {
 		return abbr, true
 	}
-	return "", false
+	return lowerCaseCountryLookup(country)
+}
+
+func lowerCaseCountryLookup(country string) (string, bool) {
+	minEditDistance := -1
+	closestMatch := ""
+	for countryKey, iso := range countryToAbbreviation {
+		if strings.ToLower(countryKey) == strings.ToLower(country) {
+			return iso, true
+		}
+		if editDistance := editDistance([]rune(country), []rune(countryKey)); minEditDistance == -1 || editDistance < minEditDistance {
+			minEditDistance = editDistance
+			closestMatch = countryKey
+		}
+	}
+	return closestMatch, false
 }

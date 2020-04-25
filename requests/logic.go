@@ -2,6 +2,8 @@ package requests
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -19,34 +21,29 @@ type writer interface {
 	WriteHeader(statusCode int)
 }
 
-func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, string, string, bool, bool, bool, bool) {
+func parseURL(URL *url.URL, dateFormat string) (string, string, string, bool, bool, bool, error) {
 	from := parseURLQuery(URL, "from")
 	to := parseURLQuery(URL, "to")
 	country := parseURLQuery(URL, "country")
 
-	from, ok := dateformat.FormatDate(dateFormat, from)
-	if !ok {
-		return "", "", "", false, false, false, false
-	}
-	to, ok = dateformat.FormatDate(dateFormat, to)
-	if !ok {
-		return "", "", "", false, false, false, false
+	from, fromOk := dateformat.FormatDate(dateFormat, from)
+	to, toOk := dateformat.FormatDate(dateFormat, to)
+	if !fromOk || !toOk {
+		return "", "", "", false, false, false, errors.New("Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY")
 	}
 
-	var countryLookupFuncToCall func(string) (string, bool)
-	if getAbbreviation {
-		countryLookupFuncToCall = utils.GetAbbreviationFromCountry
-	} else {
-		countryLookupFuncToCall = utils.GetCountryFromAbbreviation
-	}
-	if countryFromAbbr, ok := countryLookupFuncToCall(country); ok {
-		country = countryFromAbbr
+	if country != "" {
+		if countryFromAbbr, ok := utils.GetAbbreviationFromCountry(country); ok {
+			country = countryFromAbbr
+		} else {
+			return "", "", "", false, false, false, fmt.Errorf("Country %s not found, did you mean: %s?", country, countryFromAbbr)
+		}
 	}
 	aggregateCountries := isStringTrue(parseURLQuery(URL, "aggregatecountries"))
 	perDay := isStringTrue(parseURLQuery(URL, "perday"))
 	worldTotal := isStringTrue(parseURLQuery(URL, "worldtotal"))
 
-	return from, to, country, aggregateCountries, perDay, worldTotal, true
+	return from, to, country, aggregateCountries, perDay, worldTotal, nil
 }
 
 func isStringTrue(str string) bool {
@@ -102,9 +99,9 @@ func getResponse(getDataFn func(from string, to string, country string, aggregat
 	log.Println(URL.String())
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	from, to, country, aggregateCountries, perDay, worldTotal, ok := parseURL(URL, getCountryAbbreviation, dateformat.CasesDateFormat)
-	if !ok {
-		http.Error(w, "Date format is not recognised, please use either YYYY-MM-DD, YYYY/MM/DD, MM-DD-YY or MM/DD/YY", http.StatusBadRequest)
+	from, to, country, aggregateCountries, perDay, worldTotal, err := parseURL(URL, dateformat.CasesDateFormat)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	response, jsonErr, internalErr := getDataFn(from, to, country, aggregateCountries, perDay, worldTotal)

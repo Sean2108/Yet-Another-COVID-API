@@ -29,7 +29,7 @@ func (a *CaseCountsAggregated) equals(b CaseCountsAggregated) bool {
 	return true
 }
 
-func verifyResultsCaseCountArr(result []CaseCount, expectedData []CaseCount, t *testing.T) {
+func verifyResultsCaseCountArr(expectedData []CaseCount, result []CaseCount, t *testing.T) {
 	for i, item := range result {
 		if item != expectedData[i] {
 			t.Errorf("Result data is incorrect, got: %+v, want %+v.", item, expectedData[i])
@@ -37,7 +37,7 @@ func verifyResultsCaseCountArr(result []CaseCount, expectedData []CaseCount, t *
 	}
 }
 
-func verifyResultsCaseCountsMap(result map[string]map[string]CaseCounts, expectedData map[string]map[string]CaseCounts, t *testing.T) {
+func verifyResultsCaseCountsMap(expectedData map[string]map[string]CaseCounts, result map[string]map[string]CaseCounts, t *testing.T) {
 	for country, countryInfo := range result {
 		for state, stateInfo := range countryInfo {
 			if !stateInfo.equals(expectedData[country][state]) {
@@ -47,7 +47,7 @@ func verifyResultsCaseCountsMap(result map[string]map[string]CaseCounts, expecte
 	}
 }
 
-func verifyResultsCountryCaseCountsMap(result map[string]CaseCounts, expectedData map[string]CaseCounts, t *testing.T) {
+func verifyResultsCountryCaseCountsMap(expectedData map[string]CaseCounts, result map[string]CaseCounts, t *testing.T) {
 	for country, countryInfo := range result {
 		if !countryInfo.equals(expectedData[country]) {
 			t.Errorf("Result data is incorrect, got: %+v, want %+v.", countryInfo, expectedData[country])
@@ -55,7 +55,7 @@ func verifyResultsCountryCaseCountsMap(result map[string]CaseCounts, expectedDat
 	}
 }
 
-func verifyResultsCaseCountsAgg(result map[string]map[string]CaseCountsAggregated, expectedData map[string]map[string]CaseCountsAggregated, t *testing.T) {
+func verifyResultsCaseCountsAgg(expectedData map[string]map[string]CaseCountsAggregated, result map[string]map[string]CaseCountsAggregated, t *testing.T) {
 	for country, countryInfo := range result {
 		for state, stateInfo := range countryInfo {
 			if !stateInfo.equals(expectedData[country][state]) {
@@ -65,7 +65,7 @@ func verifyResultsCaseCountsAgg(result map[string]map[string]CaseCountsAggregate
 	}
 }
 
-func verifyResultsCountryCaseCountsAgg(result map[string]CaseCountsAggregated, expectedData map[string]CaseCountsAggregated, t *testing.T) {
+func verifyResultsCountryCaseCountsAgg(expectedData map[string]CaseCountsAggregated, result map[string]CaseCountsAggregated, t *testing.T) {
 	for country, countryInfo := range result {
 		if !countryInfo.equals(expectedData[country]) {
 			t.Errorf("Result data is incorrect, got: %+v, want %+v.", countryInfo, expectedData[country])

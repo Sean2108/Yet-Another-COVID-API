@@ -18,7 +18,7 @@ func TestEditDistance(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		result := EditDistance([]rune(table.str1), []rune(table.str2))
+		result := editDistance([]rune(table.str1), []rune(table.str2))
 		if result != table.expected {
 			t.Errorf("Result of EditDistance was incorrect, got: %d, want: %d.", result, table.expected)
 		}
