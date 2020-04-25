@@ -1,29 +1,11 @@
 package casecount
 
 import (
-	"encoding/csv"
 	"time"
 
 	"yet-another-covid-map-api/dateformat"
 	"yet-another-covid-map-api/utils"
 )
-
-func readCSVFromURL(url string) ([][]string, error) {
-	resp, err := client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	reader := csv.NewReader(resp.Body)
-	reader.Comma = ','
-	data, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
 
 func getDaysBetweenDates(startDate time.Time, endDate time.Time) int {
 	return int(endDate.Sub(startDate).Hours() / 24)

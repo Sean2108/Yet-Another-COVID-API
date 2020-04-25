@@ -10,6 +10,7 @@ import (
 	"yet-another-covid-map-api/casecount"
 	"yet-another-covid-map-api/dateformat"
 	"yet-another-covid-map-api/news"
+	"yet-another-covid-map-api/utils"
 )
 
 type writer interface {
@@ -34,9 +35,9 @@ func parseURL(URL *url.URL, getAbbreviation bool, dateFormat string) (string, st
 
 	var countryLookupFuncToCall func(string) (string, bool)
 	if getAbbreviation {
-		countryLookupFuncToCall = getAbbreviationFromCountry
+		countryLookupFuncToCall = utils.GetAbbreviationFromCountry
 	} else {
-		countryLookupFuncToCall = getCountryFromAbbreviation
+		countryLookupFuncToCall = utils.GetCountryFromAbbreviation
 	}
 	if countryFromAbbr, ok := countryLookupFuncToCall(country); ok {
 		country = countryFromAbbr

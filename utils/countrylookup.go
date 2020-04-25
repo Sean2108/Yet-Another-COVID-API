@@ -1,4 +1,4 @@
-package requests
+package utils
 
 import "strings"
 
@@ -73,14 +73,14 @@ func reverseMap(m map[string]string) map[string]string {
 	return reversedMap
 }
 
-func getCountryFromAbbreviation(abbr string) (string, bool) {
+func GetCountryFromAbbreviation(abbr string) (string, bool) {
 	if country, ok := abbreviationToCountry[strings.ToLower(abbr)]; ok {
 		return country, true
 	}
 	return "", false
 }
 
-func getAbbreviationFromCountry(country string) (string, bool) {
+func GetAbbreviationFromCountry(country string) (string, bool) {
 	if abbr, ok := countryToAbbreviation[country]; ok {
 		return abbr, true
 	}
