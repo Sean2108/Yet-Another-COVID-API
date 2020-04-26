@@ -78,11 +78,13 @@ func extractUSCaseCounts(confirmedData [][]string, deathsData [][]string) map[st
 		} else {
 			lat, err := strconv.ParseFloat(confirmedRow[8], 32)
 			if err != nil {
-				log.Fatal(err.Error())
+				log.Println(err.Error())
+				return nil
 			}
 			long, err := strconv.ParseFloat(confirmedRow[9], 32)
 			if err != nil {
-				log.Fatal(err.Error())
+				log.Println(err.Error())
+				return nil
 			}
 			if counts, ok := getCaseCountsArray(headerRow, confirmedRow, deathsData[rowIndex], nil, 11, 1); ok {
 				usInfo[state] = CaseCounts{LocationAndPopulation{float32(lat), float32(long), utils.StatePopulationLookup["US"][state]}, counts}
@@ -106,7 +108,8 @@ func getColumnValue(row []string, colIndex int) (int, bool) {
 	if row != nil {
 		count, err := strconv.Atoi(row[colIndex])
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Println(err.Error())
+			return 0, false
 		}
 		if count < 0 {
 			return 0, false
@@ -140,11 +143,13 @@ func getCaseCountsData(headerRow []string, confirmedRow []string, deathsRow []st
 	}
 	lat, latError := strconv.ParseFloat(rowDetails[2], 32)
 	if latError != nil {
-		log.Fatal(latError.Error())
+		log.Println(latError.Error())
+		return
 	}
 	long, longError := strconv.ParseFloat(rowDetails[3], 32)
 	if longError != nil {
-		log.Fatal(longError.Error())
+		log.Println(longError.Error())
+		return
 	}
 	ch <- extractedInformation{rowDetails[0], iso, CaseCounts{LocationAndPopulation{float32(lat), float32(long), utils.StatePopulationLookup[iso][rowDetails[0]]}, counts}}
 }
