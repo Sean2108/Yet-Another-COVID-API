@@ -33,24 +33,24 @@ type CaseCountsAggregated struct {
 
 // CountryWithStates : contains name and state information of the country with detailed states information
 type CountryWithStates struct {
-	Name   string                `json:"name"`
+	Name   string                `json:"country"`
 	States map[string]CaseCounts `json:"states"`
 }
 
 // Country : contains name and information of the country
 type Country struct {
-	Name string `json:"name"`
+	Name string `json:"country"`
 	CaseCounts
 }
 
 // CountryWithStatesAggregated : contains name and aggregated state information of the country with detailed states information
 type CountryWithStatesAggregated struct {
-	Name   string                          `json:"name"`
+	Name   string                          `json:"country"`
 	States map[string]CaseCountsAggregated `json:"states"`
 }
 
 // CountryAggregated : contains name and aggregated information of the country
 type CountryAggregated struct {
-	Name string `json:"name"`
+	Name string `json:"country"`
 	CaseCountsAggregated
 }
