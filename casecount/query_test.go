@@ -211,7 +211,7 @@ func TestAggregateDataBetweenDates_AllDates(t *testing.T) {
 		"GB": CountryWithStatesAggregated{
 			Name: "United Kingdom",
 			States: map[string]CaseCountsAggregated{
-				"": CaseCountsAggregated{
+				"London": CaseCountsAggregated{
 					LocationAndPopulation{55.3781, -3.4360000000000004, 0},
 					statistics{28, 9, 10},
 				},
@@ -255,7 +255,7 @@ func TestAggregateDataBetweenDates_QueryDates(t *testing.T) {
 		"GB": CountryWithStatesAggregated{
 			Name: "United Kingdom",
 			States: map[string]CaseCountsAggregated{
-				"": CaseCountsAggregated{
+				"London": CaseCountsAggregated{
 					LocationAndPopulation{55.3781, -3.4360000000000004, 0},
 					statistics{14, 5, 5},
 				},
@@ -317,7 +317,7 @@ func TestAggregateDataBetweenDates_QueryDatesBeforeAndAfter_ShouldReturnAll(t *t
 		"GB": CountryWithStatesAggregated{
 			Name: "United Kingdom",
 			States: map[string]CaseCountsAggregated{
-				"": CaseCountsAggregated{
+				"London": CaseCountsAggregated{
 					LocationAndPopulation{55.3781, -3.4360000000000004, 0},
 					statistics{28, 9, 10},
 				},
@@ -388,7 +388,7 @@ func TestAggregateDataBetweenDates_QueryDates_FromIsOutOfRange(t *testing.T) {
 		"GB": CountryWithStatesAggregated{
 			Name: "United Kingdom",
 			States: map[string]CaseCountsAggregated{
-				"": CaseCountsAggregated{
+				"London": CaseCountsAggregated{
 					LocationAndPopulation{55.3781, -3.4360000000000004, 0},
 					statistics{20, 6, 5},
 				},
@@ -432,7 +432,7 @@ func TestAggregateDataBetweenDates_QueryDates_ToIsOutOfRange(t *testing.T) {
 		"GB": CountryWithStatesAggregated{
 			Name: "United Kingdom",
 			States: map[string]CaseCountsAggregated{
-				"": CaseCountsAggregated{
+				"London": CaseCountsAggregated{
 					LocationAndPopulation{55.3781, -3.4360000000000004, 0},
 					statistics{22, 8, 10},
 				},
@@ -476,7 +476,7 @@ func TestAggregateDataBetweenDates_QueryDates_FromAndToBothOutOfRange(t *testing
 		"GB": CountryWithStatesAggregated{
 			Name: "United Kingdom",
 			States: map[string]CaseCountsAggregated{
-				"": CaseCountsAggregated{
+				"London": CaseCountsAggregated{
 					LocationAndPopulation{55.3781, -3.4360000000000004, 0},
 					statistics{28, 9, 10},
 				},
@@ -567,7 +567,7 @@ func TestAggregateCountryDataFromStatesAggregate_QueryDates(t *testing.T) {
 			"Singapore",
 			CaseCountsAggregated{
 				LocationAndPopulation{1.2833, 103.8333, 0},
-				statistics{12, 6, 6},
+				statistics{12, 6, 4},
 			},
 		},
 		"GB": CountryAggregated{

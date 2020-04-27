@@ -99,19 +99,23 @@ func getTestCacheData() map[string]CountryWithStates {
 }
 
 func setupTest() {
-	client = &mockClient{}
-	clientGetCallCounter = 0
 	utils.AbbreviationToCountry = map[string]string{
 		"AF": "Afghanistan",
 		"AL": "Albania",
 		"DZ": "Algeria",
 		"US": "US",
+		"CN": "China",
+		"SG": "Singapore",
+		"GB": "United Kingdom",
 	}
 	utils.CountryToAbbreviation = map[string]string{
-		"Afghanistan": "AF",
-		"Albania":     "AL",
-		"Algeria":     "DZ",
-		"US":          "US",
+		"Afghanistan":    "AF",
+		"Albania":        "AL",
+		"Algeria":        "DZ",
+		"US":             "US",
+		"China":          "CN",
+		"Singapore":      "SG",
+		"United Kingdom": "GB",
 	}
 	utils.StatePopulationLookup = map[string]map[string]int{
 		"AF": map[string]int{
@@ -127,14 +131,27 @@ func setupTest() {
 			"":               300000,
 			"American Samoa": 40000,
 		},
+		"CN": map[string]int{
+			"Hubei":    300000,
+			"Shanghai": 40000,
+			"Beijing":  50000,
+		},
+		"SG": map[string]int{
+			"": 6000,
+		},
+		"GB": map[string]int{
+			"London": 7000,
+		},
 	}
 }
 
-func TestMain(m *testing.M) {
+func init() {
 	setupTest()
 }
 
 func TestUpdateCaseCounts(t *testing.T) {
+	client = &mockClient{}
+	clientGetCallCounter = 0
 	UpdateCaseCounts()
 	if firstDate.Format(dateformat.CasesDateFormat) != "1/22/20" {
 		t.Errorf("Value of firstDate is incorrect, got: %s, want %s.", firstDate, "1/22/20")
@@ -233,6 +250,8 @@ func TestUpdateCaseCounts(t *testing.T) {
 }
 
 func TestGetCounts(t *testing.T) {
+	client = &mockClient{}
+	clientGetCallCounter = 0
 	UpdateCaseCounts()
 
 	expectedQueryAgg := map[string]CountryWithStatesAggregated{
