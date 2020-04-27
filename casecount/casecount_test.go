@@ -21,8 +21,10 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 		csvStr = "Province/State,Country/Region,Lat,Long,1/22/20,1/23/20,1/24/20\n,Afghanistan,33.0,65.1,2,3,4\n,Albania,41.1533,20.1683,4,5,6\n,Algeria,28.0339,1.6596,7,8,9\n,US,37.0902,-95.7129,10,11,12"
 	} else if clientGetCallCounter == 3 {
 		csvStr = "UID,iso2,iso3,code3,FIPS,Admin2,Province_State,Country_Region,Lat,Long_,Combined_Key,1/22/20,1/23/20,1/24/20\n16,AS,ASM,16,60.0,,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",4,5,6"
-	} else {
+	} else if clientGetCallCounter == 4 {
 		csvStr = "UID,iso2,iso3,code3,FIPS,Admin2,Province_State,Country_Region,Lat,Long_,Combined_Key,Population,1/22/20,1/23/20,1/24/20\n16,AS,ASM,16,60.0,,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",55641,1,2,3"
+	} else {
+		csvStr = "Province/State,Country/Region,Lat,Long,1/22/20,1/23/20,1/24/20\n,Afghanistan,33.0,65.1,2,3,a\n,Albania,41.1533,20.1683,4,5,6\n,Algeria,28.0339,1.6596,7,8,9\n,US,37.0902,-95.7129,10,11,12"
 	}
 	clientGetCallCounter++
 	r := ioutil.NopCloser(bytes.NewReader([]byte(csvStr)))
@@ -132,7 +134,7 @@ func setupTest() {
 			"American Samoa": 40000,
 		},
 		"CN": map[string]int{
-			"Hubei":    300000,
+			"Hubei":    30000,
 			"Shanghai": 40000,
 			"Beijing":  50000,
 		},
@@ -236,7 +238,7 @@ func TestUpdateCaseCounts(t *testing.T) {
 		"US": CountryAggregated{
 			"US",
 			CaseCountsAggregated{
-				LocationAndPopulation{37.0902, -95.7129, 340000},
+				LocationAndPopulation{37.0902, -95.7129, 300000},
 				statistics{6, 3, 12},
 			},
 		},
@@ -247,6 +249,25 @@ func TestUpdateCaseCounts(t *testing.T) {
 	caseCountsMap = nil
 	stateAggregatedMap = nil
 	countryAggregatedMap = nil
+}
+
+func UpdateCaseCountsSkipFaultyData(t *testing.T) {
+	client = &mockClient{}
+	clientGetCallCounter = 4
+	UpdateCaseCounts()
+	if firstDate.Format(dateformat.CasesDateFormat) != "1/22/20" {
+		t.Errorf("Value of firstDate is incorrect, got: %s, want %s.", firstDate, "1/22/20")
+	}
+	if lastDate.Format(dateformat.CasesDateFormat) != "1/24/20" {
+		t.Errorf("Value of lastDate is incorrect, got: %s, want %s.", lastDate, "1/24/20")
+	}
+	expectedCaseCounts := getTestCacheData()
+	delete(expectedCaseCounts, "AF")
+
+	if len(caseCountsMap) != 3 {
+		t.Errorf("Length of confirmedData is incorrect, got: %d, want %d.", len(caseCountsMap), 3)
+	}
+	verifyResultsCaseCountsMap(caseCountsMap, expectedCaseCounts, t)
 }
 
 func TestGetCounts(t *testing.T) {
@@ -324,7 +345,7 @@ func TestGetCounts(t *testing.T) {
 		"US": CountryAggregated{
 			"US",
 			CaseCountsAggregated{
-				LocationAndPopulation{37.0902, -95.7129, 340000},
+				LocationAndPopulation{37.0902, -95.7129, 300000},
 				statistics{5, 2, 11},
 			},
 		},

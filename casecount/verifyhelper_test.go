@@ -5,7 +5,7 @@ import (
 )
 
 func (a *CaseCounts) equals(b CaseCounts) bool {
-	if int(a.Lat) != int(b.Lat) || int(a.Long) != int(b.Long) {
+	if a.Population != b.Population || int(a.Lat) != int(b.Lat) || int(a.Long) != int(b.Long) {
 		return false
 	}
 	if len(a.Counts) != len(b.Counts) {
@@ -20,7 +20,7 @@ func (a *CaseCounts) equals(b CaseCounts) bool {
 }
 
 func (a *CaseCountsAggregated) equals(b CaseCountsAggregated) bool {
-	if int(a.Lat) != int(b.Lat) || int(a.Long) != int(b.Long) {
+	if a.Population != b.Population || int(a.Lat) != int(b.Lat) || int(a.Long) != int(b.Long) {
 		return false
 	}
 	if a.statistics != b.statistics {

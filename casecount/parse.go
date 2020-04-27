@@ -44,6 +44,10 @@ func extractCaseCounts(headerRow []string, confirmedData [][]string, deathsData 
 				state.Counts[i].Recovered = count.Recovered
 			}
 		} else {
+			if _, ok := caseCountsMap[item.country]; !ok {
+				countryName, _ := utils.GetCountryFromAbbreviation(item.country)
+				caseCountsMap[item.country] = CountryWithStates{countryName, map[string]CaseCounts{}}
+			}
 			caseCountsMap[item.country].States[item.state] = item.counts
 		}
 	}
