@@ -20,9 +20,9 @@ func (m *mockClient) Get(url string) (*http.Response, error) {
 	if clientGetCallCounter < 3 {
 		csvStr = "Province/State,Country/Region,Lat,Long,1/22/20,1/23/20,1/24/20\n,Afghanistan,33.0,65.1,2,3,4\n,Albania,41.1533,20.1683,4,5,6\n,Algeria,28.0339,1.6596,7,8,9\n,US,37.0902,-95.7129,10,11,12"
 	} else if clientGetCallCounter == 3 {
-		csvStr = "UID,iso2,iso3,code3,FIPS,Admin2,Province_State,Country_Region,Lat,Long_,Combined_Key,1/22/20,1/23/20,1/24/20\n16,AS,ASM,16,60.0,,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",4,5,6"
+		csvStr = "UID,iso2,iso3,code3,FIPS,Admin2,Province_State,Country_Region,Lat,Long_,Combined_Key,1/22/20,1/23/20,1/24/20\n16,AS,ASM,16,60.0,,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",2,2,3\n16,AS,ASM,16,60.0,substate,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",2,3,3"
 	} else if clientGetCallCounter == 4 {
-		csvStr = "UID,iso2,iso3,code3,FIPS,Admin2,Province_State,Country_Region,Lat,Long_,Combined_Key,Population,1/22/20,1/23/20,1/24/20\n16,AS,ASM,16,60.0,,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",55641,1,2,3"
+		csvStr = "UID,iso2,iso3,code3,FIPS,Admin2,Province_State,Country_Region,Lat,Long_,Combined_Key,Population,1/22/20,1/23/20,1/24/20\n16,AS,ASM,16,60.0,,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",55641,1,1,2\n16,AS,ASM,16,60.0,substate,American Samoa,US,-14.270999999999999,-170.132,\"American Samoa, US\",55641,0,1,1"
 	} else {
 		csvStr = "Province/State,Country/Region,Lat,Long,1/22/20,1/23/20,1/24/20\n,Afghanistan,33.0,65.1,2,3,a\n,Albania,41.1533,20.1683,4,5,6\n,Algeria,28.0339,1.6596,7,8,9\n,US,37.0902,-95.7129,10,11,12"
 	}
