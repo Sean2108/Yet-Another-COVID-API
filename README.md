@@ -1,4 +1,4 @@
-# Yet-Another-COVID-API
+# Yet Another COVID API
 
 [![Build Status](https://travis-ci.com/Sean2108/Yet-Another-COVID-Map-API.svg?branch=master)](https://travis-ci.com/Sean2108/Yet-Another-COVID-Map-API)[![codecov](https://codecov.io/gh/Sean2108/Yet-Another-COVID-Map-API/branch/master/graph/badge.svg)](https://codecov.io/gh/Sean2108/Yet-Another-COVID-Map-API)
 
