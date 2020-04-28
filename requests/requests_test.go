@@ -97,19 +97,21 @@ func TestGetCaseCountsResponse_PerDay(t *testing.T) {
 		country            string
 		aggregateCountries bool
 		perDay             bool
+		worldTotal         bool
 	}{
-		{"", false, true},
-		{"SG", false, true},
-		{"", true, false},
-		{"SG", true, false},
-		{"", false, false},
-		{"", true, true},
-		{"SG", false, false},
+		{"", false, true, false},
+		{"SG", false, true, false},
+		{"", true, false, false},
+		{"SG", true, false, false},
+		{"", false, false, false},
+		{"", true, true, false},
+		{"SG", false, false, false},
+		{"", false, false, true},
 	}
 
 	for _, table := range tables {
 		casecount.UpdateCaseCounts()
-		response, err, caseCountErr := getCaseCountsResponse("", "", table.country, table.aggregateCountries, table.perDay, false)
+		response, err, caseCountErr := getCaseCountsResponse("", "", table.country, table.aggregateCountries, table.perDay, table.worldTotal)
 		if len(response) < 3 {
 			t.Errorf("Response should not be empty, got length: %d, want length: %s.", len(response), "more than 2")
 		}
@@ -119,6 +121,18 @@ func TestGetCaseCountsResponse_PerDay(t *testing.T) {
 		if caseCountErr != nil {
 			t.Errorf("caseCountErr should be null, got: %s, want: nil.", caseCountErr.Error())
 		}
+	}
+}
+func TestGetNewsForCountryResponse_PerDay(t *testing.T) {
+	response, err, newsErr := getNewsForCountryResponse("", "", "Singapore", false, false, false)
+	if len(response) < 3 {
+		t.Errorf("Response should not be empty, got length: %d, want length: %s.", len(response), "more than 2")
+	}
+	if err != nil {
+		t.Errorf("Err should be null, got: %s, want: nil.", err.Error())
+	}
+	if newsErr != nil {
+		t.Errorf("caseCountErr should be null, got: %s, want: nil.", newsErr.Error())
 	}
 }
 
