@@ -27,8 +27,8 @@ func init() {
 }
 
 func main() {
-	// the John Hopkins data is updated at 03:30 and 04:00 GMT everyday, so we will call update at 4am utc
-	schedule.CallFunctionDaily(casecount.UpdateCaseCounts, 4)
+	// the John Hopkins data is updated at about 23:59 UTC everyday, so we will call update at 1am UTC
+	schedule.CallFunctionDaily(casecount.UpdateCaseCounts, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	setupRoutes()
