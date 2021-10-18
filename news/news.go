@@ -56,6 +56,9 @@ const (
 
 func init() {
 	apiKey = os.Getenv(newsEnvironmentVar)
+	if apiKey == "" {
+		log.Fatal("News API key is not populated! Please add your apiKey to your " + newsEnvironmentVar + " environment variable.")
+	}
 	client = &http.Client{}
 }
 
@@ -81,9 +84,6 @@ func formSingleURLQuery(queryName string, value string) string {
 }
 
 func formURLQuery(from string, to string, country string) string {
-	if apiKey == "" {
-		log.Fatal("News API key is not populated! Please add paste your apiKey in the apiKey variable in the file news/news.go.")
-	}
 	return fmt.Sprintf("%s?apiKey=%s&q=virus&language=en%s%s%s", newsAPIHeadlinesURL, apiKey,
 		formSingleURLQuery("from", from), formSingleURLQuery("to", to), formSingleURLQuery("country", country))
 }
