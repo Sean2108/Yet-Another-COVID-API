@@ -125,12 +125,20 @@ func getColumnValue(row []string, colIndex int) (int, bool) {
 
 func getCaseCountsArray(headerRow []string, confirmedRow []string, deathsRow []string, recoveredRow []string, startIndex int, deathsColOffset int) ([]CaseCount, bool) {
 	var counts []CaseCount
+	previousRecovered := 0
 	for colIndex := startIndex; colIndex < len(headerRow); colIndex++ {
 		confirmedCount, confirmedOk := getColumnValue(confirmedRow, colIndex)
 		deathsCount, deathsOk := getColumnValue(deathsRow, colIndex+deathsColOffset)
 		recoveredCount, recoveredOk := getColumnValue(recoveredRow, colIndex)
 		if !(confirmedOk && deathsOk && recoveredOk) {
 			return nil, false
+		}
+		if recoveredCount == 0 {
+			// workaround for https://github.com/CSSEGISandData/COVID-19/issues/4465,
+			// recovery data is discontinued
+			recoveredCount = previousRecovered
+		} else {
+			previousRecovered = recoveredCount
 		}
 		caseCountItem := CaseCount{headerRow[colIndex], statistics{confirmedCount, deathsCount, recoveredCount}}
 		counts = append(counts, caseCountItem)
