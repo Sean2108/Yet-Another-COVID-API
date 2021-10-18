@@ -5,6 +5,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+env:
+    NEWS_API_KEY: testapikey
 
 jobs:
 
