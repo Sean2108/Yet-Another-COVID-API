@@ -57,7 +57,7 @@ const (
 func init() {
 	apiKey = os.Getenv(newsEnvironmentVar)
 	if apiKey == "" {
-		log.Fatal("News API key is not populated! Please add paste your apiKey in the apiKey variable in the file news/news.go.")
+		log.Fatal("News API key is not populated! Please add your apiKey to your " + newsEnvironmentVar + " environment variable.")
 	}
 	client = &http.Client{}
 }
